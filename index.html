@@ -268,6 +268,16 @@
   .db-status { color:#a0aec0; font-weight:500; }
   .db-time { color:#4a5568; margin-left:auto; }
 
+
+  /* Role-based CSS guard — admin sections hidden for sales role */
+  body[data-role="sales"] #sec-pricing,
+  body[data-role="sales"] #sec-chargers,
+  body[data-role="sales"] #sec-team,
+  body[data-role="sales"] #sec-approvals,
+  body[data-role="sales"] #sec-allq,
+  body[data-role="sales"] #sec-dashboard,
+  body[data-role="sales"] #anav { display: none !important; }
+
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -328,11 +338,11 @@
     </div>
     <div style="font-size:10px;color:#718096">EV Charger Quotation Tool</div>
   </div>
-  <div class="nav" id="anav">
+  <div class="nav" id="anav" style="display:none">
     <div class="nav-section">Admin</div>
     <button class="nav-item active" onclick="nav('dashboard')" id="n-dashboard"><i class="ti ti-layout-dashboard"></i>Dashboard</button>
-    <button class="nav-item" onclick="nav('approvals')" id="n-approvals"><i class="ti ti-shield-check"></i>Approvals<span class="nbadge nb-warn" id="appr-badge">2</span></button>
-    <button class="nav-item" onclick="nav('allq')" id="n-allq"><i class="ti ti-files"></i>All quotes<span class="nbadge nb-gray" id="allq-badge">5</span></button>
+    <button class="nav-item" onclick="nav('approvals')" id="n-approvals"><i class="ti ti-shield-check"></i>Approvals<span class="nbadge nb-warn" id="appr-badge">0</span></button>
+    <button class="nav-item" onclick="nav('allq')" id="n-allq"><i class="ti ti-files"></i>All quotes<span class="nbadge nb-gray" id="allq-badge">0</span></button>
     <button class="nav-item" onclick="nav('pricing')" id="n-pricing"><i class="ti ti-tag"></i>Pricing manager</button>
     <button class="nav-item" onclick="nav('chargers')" id="n-chargers"><i class="ti ti-bolt"></i>Charger models</button>
     <button class="nav-item" onclick="nav('team')" id="n-team"><i class="ti ti-users"></i>Team</button>
@@ -340,7 +350,7 @@
   <div class="nav" id="tnav" style="display:none">
     <div class="nav-section">Sales</div>
     <button class="nav-item" onclick="nav('newq')" id="n-newq"><i class="ti ti-plus"></i>New quote</button>
-    <button class="nav-item" onclick="nav('myq')" id="n-myq"><i class="ti ti-file-text"></i>My quotes<span class="nbadge nb-info" id="myq-badge">3</span></button>
+    <button class="nav-item" onclick="nav('myq')" id="n-myq"><i class="ti ti-file-text"></i>My quotes<span class="nbadge nb-info" id="myq-badge">0</span></button>
   </div>
   <div class="role-pill" id="rpill">
     <i class="ti ti-crown"></i><span id="rlabel">Super Admin</span>
@@ -374,17 +384,17 @@
     <!-- ═══ DASHBOARD ═══ -->
     <div class="sec active" id="sec-dashboard">
       <div class="metrics">
-        <div class="metric"><div class="metric-label">Pending approval</div><div class="metric-value" id="m-pend" style="color:#d69e2e">2</div><div class="metric-sub">awaiting review</div></div>
-        <div class="metric"><div class="metric-label">Approved</div><div class="metric-value" id="m-appr" style="color:#38a169">2</div><div class="metric-sub">ready to send</div></div>
-        <div class="metric"><div class="metric-label">Sent to customer</div><div class="metric-value" id="m-sent">1</div><div class="metric-sub">this month</div></div>
-        <div class="metric"><div class="metric-label">Total pipeline value</div><div class="metric-value" id="m-val">₹2.8L</div><div class="metric-sub">approved + sent</div></div>
+        <div class="metric"><div class="metric-label">Pending approval</div><div class="metric-value" id="m-pend" style="color:#d69e2e">0</div><div class="metric-sub">awaiting review</div></div>
+        <div class="metric"><div class="metric-label">Approved</div><div class="metric-value" id="m-appr" style="color:#38a169">0</div><div class="metric-sub">ready to send</div></div>
+        <div class="metric"><div class="metric-label">Sent to customer</div><div class="metric-value" id="m-sent">0</div><div class="metric-sub">this month</div></div>
+        <div class="metric"><div class="metric-label">Total pipeline value</div><div class="metric-value" id="m-val">₹0</div><div class="metric-sub">approved + sent</div></div>
       </div>
       <div class="pipeline">
-        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#718096"></div>Draft</div><div class="p-count" id="ps-draft">1</div></div>
-        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#ed8936"></div>Pending review</div><div class="p-count" id="ps-pend">2</div></div>
-        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#805ad5"></div>Revision needed</div><div class="p-count" id="ps-rev">1</div></div>
-        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#38a169"></div>Approved</div><div class="p-count" id="ps-appr">2</div></div>
-        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#3182ce"></div>Sent</div><div class="p-count" id="ps-sent">1</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#718096"></div>Draft</div><div class="p-count" id="ps-draft">0</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#ed8936"></div>Pending review</div><div class="p-count" id="ps-pend">0</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#805ad5"></div>Revision needed</div><div class="p-count" id="ps-rev">0</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#38a169"></div>Approved</div><div class="p-count" id="ps-appr">0</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#3182ce"></div>Sent</div><div class="p-count" id="ps-sent">0</div></div>
       </div>
       <div class="card">
         <div class="card-header"><div><div class="card-title">Pending approvals</div><div class="card-sub">Quotes submitted by sales team awaiting your review</div></div><button class="btn btn-warning btn-sm" onclick="nav('approvals')"><i class="ti ti-shield-check"></i>Review all</button></div>
@@ -2382,6 +2392,7 @@ async function doLogin() {
   currentUser = matched;
   _currentUserName = matched.name;
   role = matched.role==='admin'?'admin':'team';
+  document.body.dataset.role = role;
   // Persist session so refresh doesn't log out
   try {
     localStorage.setItem('ev_session', JSON.stringify({
@@ -2389,6 +2400,9 @@ async function doLogin() {
       role: matched.role, status: matched.status
     }));
   } catch(e) {}
+  /* Set role before showing app — prevents flash of wrong content */
+  document.getElementById('anav').style.display = role==='admin'?'block':'none';
+  document.getElementById('tnav').style.display  = role==='team'?'block':'none';
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main-app').style.display='flex';
   document.getElementById('main-content').style.display='flex';
@@ -2411,6 +2425,7 @@ async function doLogin() {
 }
 function doLogout() {
   currentUser=null; role='admin'; _currentUserName='Sales';
+  document.body.removeAttribute('data-role');
   try { localStorage.removeItem('ev_session'); } catch(e) {}
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('main-app').style.display='none';
@@ -2545,7 +2560,11 @@ populateChargerDropdown();
     currentUser = u;
     _currentUserName = u.name;
     role = u.role === 'admin' ? 'admin' : 'team';
+    document.body.dataset.role = role;
     // Show app, hide login
+    /* Set role before showing app */
+    document.getElementById('anav').style.display = role==='admin'?'block':'none';
+    document.getElementById('tnav').style.display  = role==='team'?'block':'none';
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-app').style.display     = 'flex';
     document.getElementById('main-content').style.display = 'flex';
