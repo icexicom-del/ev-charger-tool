@@ -1,0 +1,11 @@
+{
+  "name": "ev-charger-quotation-tool",
+  "version": "1.0.0",
+  "description": "EV Charger Installation Quotation Tool",
+  "dependencies": {
+    "docx": "^9.6.1"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}

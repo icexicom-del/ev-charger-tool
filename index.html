@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Charger Quotation Tool</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --surface2: #f8f9fa;
+    --border: #e2e8f0;
+    --border2: #cbd5e0;
+    --text: #1a202c;
+    --text2: #4a5568;
+    --text3: #718096;
+    --blue: #3182ce;
+    --blue-bg: #ebf4ff;
+    --blue-text: #1a4a7a;
+    --green: #38a169;
+    --green-bg: #f0fff4;
+    --green-text: #1c5e3a;
+    --amber: #d69e2e;
+    --amber-bg: #fffbeb;
+    --amber-text: #7b5c00;
+    --red: #e53e3e;
+    --red-bg: #fff5f5;
+    --red-text: #7b1c1c;
+    --purple: #805ad5;
+    --purple-bg: #faf5ff;
+    --purple-text: #44337a;
+    --gray-bg: #edf2f7;
+    --gray-text: #4a5568;
+    --sidebar-w: 220px;
+    --topbar-h: 60px;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: var(--text); background: var(--bg); height: 100vh; display: flex; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar { width: var(--sidebar-w); background: #1a202c; color: #e2e8f0; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; }
+  .logo { padding: 20px 16px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .logo-icon { font-size: 22px; margin-bottom: 6px; }
+  .logo-title { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 11px; color: #718096; margin-top: 2px; }
+  .nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+  .nav-section { font-size: 10px; color: #4a5568; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 10px 8px 5px; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: var(--radius); cursor: pointer; font-size: 13px; color: #a0aec0; border: none; background: none; width: 100%; text-align: left; transition: all .15s; position: relative; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+  .nav-item.active { background: rgba(49,130,206,0.25); color: #90cdf4; font-weight: 500; }
+  .nav-item i { font-size: 17px; flex-shrink: 0; }
+  .nbadge { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .nb-warn { background: #d69e2e; color: #fff; }
+  .nb-info { background: #3182ce; color: #fff; }
+  .nb-gray { background: #4a5568; color: #cbd5e0; }
+  .role-pill { margin: 10px 10px 14px; padding: 9px 12px; background: rgba(214,158,46,0.18); border-radius: var(--radius); font-size: 12px; font-weight: 600; color: #f6e05e; display: flex; align-items: center; gap: 8px; cursor: pointer; border: 1px solid rgba(214,158,46,0.3); transition: all .15s; }
+  .role-pill:hover { background: rgba(214,158,46,0.28); }
+  .role-pill i { font-size: 16px; }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { height: var(--topbar-h); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; box-shadow: var(--shadow); }
+  .topbar-left h1 { font-size: 16px; font-weight: 700; color: var(--text); }
+  .topbar-left p { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* SECTIONS */
+  .sec { display: none; }
+  .sec.active { display: block; }
+
+  /* METRIC CARDS */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .metric-label { font-size: 12px; color: var(--text3); font-weight: 500; margin-bottom: 6px; }
+  .metric-value { font-size: 26px; font-weight: 700; line-height: 1; }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 5px; }
+
+  /* PIPELINE */
+  .pipeline { display: flex; gap: 10px; margin-bottom: 20px; }
+  .p-stage { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; }
+  .p-stage-label { font-size: 11px; color: var(--text3); font-weight: 500; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .p-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .p-count { font-size: 22px; font-weight: 700; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .card-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--border); background: var(--surface2); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+  .price-inp { width: 90px; padding: 5px 8px; border: 1px solid var(--border2); border-radius: 6px; font-size: 13px; text-align: right; background: var(--surface2); color: var(--text); }
+  .price-inp:focus { outline: none; border-color: var(--blue); background: #fff; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid var(--border2); border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text); transition: all .15s; white-space: nowrap; }
+  .btn:hover { background: var(--surface2); border-color: var(--border); }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn-primary:hover { background: #2b6cb0; border-color: #2b6cb0; }
+  .btn-success { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-success:hover { background: #2f855a; }
+  .btn-warning { background: #ed8936; border-color: #ed8936; color: #fff; }
+  .btn-warning:hover { background: #dd6b20; }
+  .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-icon { padding: 6px 8px; }
+  .btn-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* TAGS / BADGES */
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .tag-gray { background: var(--gray-bg); color: var(--gray-text); }
+  .tag-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .tag-green { background: var(--green-bg); color: var(--green-text); }
+  .tag-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .tag-red { background: var(--red-bg); color: var(--red-text); }
+  .tag-purple { background: var(--purple-bg); color: var(--purple-text); }
+
+  /* FORM */
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 8px 11px; border: 1px solid var(--border2); border-radius: var(--radius);
+    font-size: 13px; background: var(--surface); color: var(--text); font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(49,130,206,0.12);
+  }
+  .form-group textarea { resize: vertical; min-height: 72px; }
+  .required { color: var(--red); }
+
+  /* QUOTE TOTAL */
+  .quote-total { background: #f0f4f8; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-top: 14px; }
+  .q-line { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; color: var(--text2); }
+  .q-line.bold { font-weight: 700; font-size: 16px; color: var(--text); border-top: 2px solid var(--border2); margin-top: 8px; padding-top: 10px; }
+  .q-line.total-line { font-weight: 700; font-size: 18px; color: var(--blue); border-top: 2px solid var(--blue); margin-top: 6px; padding-top: 10px; }
+
+  /* SWITCH */
+  .sw { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
+  .sw input { display: none; }
+  .sw-track { width: 34px; height: 19px; background: #cbd5e0; border-radius: 10px; position: relative; transition: .2s; flex-shrink: 0; }
+  .sw-track::after { content: ''; position: absolute; width: 15px; height: 15px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .sw input:checked + .sw-track { background: var(--blue); }
+  .sw input:checked + .sw-track::after { left: 17px; }
+
+  /* ADDON ROW */
+  .addon-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; background: var(--surface2); }
+  .addon-name { font-size: 13px; font-weight: 500; }
+  .addon-price { font-size: 12px; color: var(--text3); margin-top: 1px; }
+
+  /* REVIEW CARD */
+  .review-card { border: 1px solid var(--border); border-left: 4px solid var(--amber); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 12px; background: var(--surface); box-shadow: var(--shadow); }
+  .review-card.revision { border-left-color: var(--purple); }
+  .rc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .rc-id { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: .04em; }
+  .rc-name { font-size: 16px; font-weight: 700; margin-top: 3px; }
+  .rc-meta { font-size: 12px; color: var(--text3); margin-top: 3px; }
+  .rc-amount { font-size: 20px; font-weight: 700; color: var(--text); text-align: right; }
+  .rc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px 0; border-top: 1px solid var(--border); }
+  .rc-item label { font-size: 11px; color: var(--text3); font-weight: 500; display: block; margin-bottom: 2px; }
+  .rc-item span { font-size: 13px; font-weight: 600; }
+  .rc-note { background: #fffbeb; border: 1px solid #f6e05e; border-radius: var(--radius); padding: 9px 12px; font-size: 12px; color: #7b5c00; margin-top: 10px; font-style: italic; }
+  .rc-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* TIMELINE */
+  .timeline { display: flex; flex-direction: column; }
+  .t-item { display: flex; gap: 12px; padding-bottom: 16px; position: relative; }
+  .t-item::before { content: ''; position: absolute; left: 15px; top: 28px; bottom: 0; width: 2px; background: var(--border); }
+  .t-item:last-child::before { display: none; }
+  .t-dot { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; border: 2px solid var(--border); background: var(--surface); }
+  .t-body { flex: 1; padding-top: 4px; }
+  .t-title { font-size: 13px; font-weight: 700; }
+  .t-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .t-note { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 10px; font-size: 12px; color: var(--text2); margin-top: 6px; font-style: italic; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; width: 480px; max-width: calc(100vw - 40px); box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+
+  /* QUOTE PREVIEW */
+  .preview-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: var(--surface2); margin-bottom: 12px; }
+  .preview-card .row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+  .preview-card .row label { color: var(--text3); }
+  .preview-card .row span { font-weight: 600; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 600; display: none; align-items: center; gap: 8px; z-index: 9999; box-shadow: var(--shadow-md); animation: slideUp .2s ease; }
+  .toast.show { display: flex; }
+  .toast-success { background: var(--green); color: #fff; }
+  .toast-error { background: var(--red); color: #fff; }
+  @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; }
+
+  /* QUOTE MY LIST */
+  .qitem { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .qitem:last-child { border-bottom: none; }
+  .qitem-info { flex: 1; }
+  .qitem-name { font-size: 14px; font-weight: 700; }
+  .qitem-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .qitem-right { text-align: right; }
+  .qitem-amount { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+
+  /* NOTIFICATION BANNER */
+  .notif { background: #fff8e1; border: 1px solid #f6e05e; border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: #7b5c00; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .notif i { font-size: 18px; flex-shrink: 0; color: var(--amber); }
+
+  /* SECTION DIVIDER */
+  .sec-divider { height: 1px; background: var(--border); margin: 18px 0; }
+
+
+  /* DB sync indicator */
+  .db-bar { display:flex; align-items:center; gap:8px; padding:6px 18px; background:#1a202c; border-bottom:1px solid rgba(255,255,255,0.06); font-size:12px; flex-shrink:0; }
+  .db-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .db-dot.online  { background:#38a169; box-shadow:0 0 6px #38a169; }
+  .db-dot.offline { background:#e53e3e; }
+  .db-dot.syncing { background:#d69e2e; animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .db-label { color:#a0aec0; }
+  .db-status { color:#e2e8f0; font-weight:600; }
+  .db-time { color:#4a5568; margin-left:auto; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .pipeline { flex-wrap: wrap; }
+    .three-col { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-title">EV Charger Tool</div>
+    <div class="logo-sub">Quotation platform</div>
+  </div>
+  <div class="nav" id="anav">
+    <div class="nav-section">Admin</div>
+    <button class="nav-item active" onclick="nav('dashboard')" id="n-dashboard"><i class="ti ti-layout-dashboard"></i>Dashboard</button>
+    <button class="nav-item" onclick="nav('approvals')" id="n-approvals"><i class="ti ti-shield-check"></i>Approvals<span class="nbadge nb-warn" id="appr-badge">2</span></button>
+    <button class="nav-item" onclick="nav('allq')" id="n-allq"><i class="ti ti-files"></i>All quotes<span class="nbadge nb-gray" id="allq-badge">5</span></button>
+    <button class="nav-item" onclick="nav('pricing')" id="n-pricing"><i class="ti ti-tag"></i>Pricing manager</button>
+    <button class="nav-item" onclick="nav('chargers')" id="n-chargers"><i class="ti ti-bolt"></i>Charger models</button>
+    <button class="nav-item" onclick="nav('team')" id="n-team"><i class="ti ti-users"></i>Team</button>
+  </div>
+  <div class="nav" id="tnav" style="display:none">
+    <div class="nav-section">Sales</div>
+    <button class="nav-item" onclick="nav('newq')" id="n-newq"><i class="ti ti-plus"></i>New quote</button>
+    <button class="nav-item" onclick="nav('myq')" id="n-myq"><i class="ti ti-file-text"></i>My quotes<span class="nbadge nb-info" id="myq-badge">3</span></button>
+  </div>
+  <button class="role-pill" onclick="toggleRole()" id="rpill">
+    <i class="ti ti-crown"></i><span id="rlabel">Super Admin</span><i class="ti ti-chevron-right" style="margin-left:auto"></i>
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="ptitle">Dashboard</h1>
+      <p id="psub">Quote pipeline & approval overview</p>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="top-btn" onclick="topAct()"><i class="ti ti-plus"></i><span id="top-lbl">New quote</span></button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="toast" id="toast"></div>
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="sec active" id="sec-dashboard">
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Pending approval</div><div class="metric-value" id="m-pend" style="color:#d69e2e">2</div><div class="metric-sub">awaiting review</div></div>
+        <div class="metric"><div class="metric-label">Approved</div><div class="metric-value" id="m-appr" style="color:#38a169">2</div><div class="metric-sub">ready to send</div></div>
+        <div class="metric"><div class="metric-label">Sent to customer</div><div class="metric-value" id="m-sent">1</div><div class="metric-sub">this month</div></div>
+        <div class="metric"><div class="metric-label">Total pipeline value</div><div class="metric-value" id="m-val">₹2.8L</div><div class="metric-sub">approved + sent</div></div>
+      </div>
+      <div class="pipeline">
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#718096"></div>Draft</div><div class="p-count" id="ps-draft">1</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#ed8936"></div>Pending review</div><div class="p-count" id="ps-pend">2</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#805ad5"></div>Revision needed</div><div class="p-count" id="ps-rev">1</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#38a169"></div>Approved</div><div class="p-count" id="ps-appr">2</div></div>
+        <div class="p-stage"><div class="p-stage-label"><div class="p-dot" style="background:#3182ce"></div>Sent</div><div class="p-count" id="ps-sent">1</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">Pending approvals</div><div class="card-sub">Quotes submitted by sales team awaiting your review</div></div><button class="btn btn-warning btn-sm" onclick="nav('approvals')"><i class="ti ti-shield-check"></i>Review all</button></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Quote #</th><th>Customer</th><th>Model</th><th>Run</th><th>Amount</th><th>Submitted by</th><th>Action</th></tr></thead><tbody id="dash-pend-tbody"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent quotes</div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Quote #</th><th>Customer</th><th>Model</th><th>Amount</th><th>By</th><th>Status</th></tr></thead><tbody id="dash-recent-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ═══ APPROVALS ═══ -->
+    <div class="sec" id="sec-approvals">
+      <div id="appr-list"></div>
+      <div id="appr-empty" class="empty-state" style="display:none"><i class="ti ti-circle-check" style="color:#38a169"></i><p>All caught up — no quotes pending review</p></div>
+    </div>
+
+    <!-- ═══ ALL QUOTES ═══ -->
+    <div class="sec" id="sec-allq">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">All quotes</div>
+          <select onchange="renderAllQ(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)">
+            <option value="">All statuses</option><option>Draft</option><option>Pending review</option><option>Revision needed</option><option>Approved</option><option>Sent</option>
+          </select>
+        </div>
+        <div class="tbl-wrap"><table><thead><tr><th>Quote #</th><th>Customer</th><th>Address</th><th>Model</th><th>Run</th><th>Amount</th><th>By</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody id="allq-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ═══ PRICING ═══ -->
+    <div class="sec" id="sec-pricing">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Component price list</div><div class="card-sub">Add, edit or delete components — changes apply to all new quotes</div></div>
+          <div class="btn-group">
+            <button class="btn" onclick="resetPrices()"><i class="ti ti-refresh"></i>Reset defaults</button>
+            <button class="btn btn-primary" onclick="openAddComp()"><i class="ti ti-plus"></i>Add component</button>
+            <button class="btn btn-success" onclick="savePricing()"><i class="ti ti-device-floppy"></i>Save all</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table id="price-table">
+            <thead><tr><th style="width:30%">Component name</th><th style="width:14%">Category</th><th style="width:12%">Unit</th><th style="width:13%">Rate (₹)</th><th style="width:31%">Actions</th></tr></thead>
+            <tbody id="price-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Cable pricing — list price &amp; discount</div>
+            <div class="card-sub">Enter vendor list price and your negotiated discount % — net rate is auto-calculated and used in all quotes</div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="openAddCable()"><i class="ti ti-plus"></i>Add cable</button>
+            <button class="btn btn-success" onclick="savePricing()"><i class="ti ti-device-floppy"></i>Save all</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;color:#1e40af">
+          <i class="ti ti-info-circle" style="font-size:18px;flex-shrink:0;color:#3b82f6"></i>
+          <span>Net rate = List price &times; (1 &minus; Discount%). Update list price or discount when market rates change — the net rate recalculates instantly and applies to all new quotes.</span>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:22%">Cable type</th>
+                <th style="width:14%">Used in</th>
+                <th style="width:13%">List price<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(₹/m)</span></th>
+                <th style="width:11%">Discount<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(%)</span></th>
+                <th style="width:13%">Net rate<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(₹/m)</span></th>
+                <th style="width:10%">Margin<br><span style="font-weight:400;text-transform:none;letter-spacing:0">saved</span></th>
+                <th style="width:17%">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cable-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TEAM ═══ -->
+    <div class="sec" id="sec-team">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Team members</div><button class="btn btn-primary btn-sm"><i class="ti ti-user-plus"></i>Invite member</button></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Quotes</th><th>Status</th></tr></thead><tbody>
+          <tr><td><strong>You (Admin)</strong></td><td>admin@evcharger.in</td><td><span class="tag tag-amber">Super Admin</span></td><td>—</td><td><span class="tag tag-green">Active</span></td></tr>
+          <tr><td>Rahul Sharma</td><td>rahul@evcharger.in</td><td><span class="tag tag-blue">Sales</span></td><td id="team-rahul-count">3</td><td><span class="tag tag-green">Active</span></td></tr>
+          <tr><td>Priya Nair</td><td>priya@evcharger.in</td><td><span class="tag tag-blue">Sales</span></td><td>2</td><td><span class="tag tag-green">Active</span></td></tr>
+          <tr><td>Arjun Mehta</td><td>arjun@evcharger.in</td><td><span class="tag tag-gray">Viewer</span></td><td>0</td><td><span class="tag tag-green">Active</span></td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ═══ NEW QUOTE ═══ -->
+    <div class="sec" id="sec-newq">
+      <div class="notif"><i class="ti ti-info-circle"></i>All quotes must be submitted for admin approval before being sent to the customer.</div>
+
+      <!-- Customer details -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Customer details</div></div>
+        <div class="two-col" style="margin-bottom:12px">
+          <div class="form-group"><label>Customer name <span class="required">*</span></label><input id="qn" placeholder="Enter customer name"></div>
+          <div class="form-group"><label>Site address <span class="required">*</span></label><input id="qa" placeholder="Flat / Building, City"></div>
+        </div>
+        <div class="two-col">
+          <div class="form-group"><label>Phone</label><input id="qph" placeholder="+91 98XXXXXXXX"></div>
+          <div class="form-group"><label>Email</label><input id="qem" placeholder="customer@email.com"></div>
+        </div>
+      </div>
+
+      <!-- Charger model + scope selector -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Charger model & installation scope</div>
+          <div class="card-sub" style="margin-top:2px">Select a charger model — components auto-populate in the BoM below. Cable type for Section B extra-run pricing is set by the model but can be overridden.</div>
+        </div>
+        <div class="two-col" style="margin-bottom:12px">
+          <div class="form-group">
+            <label>Charger model <span class="required">*</span></label>
+            <select id="qcharger" onchange="onChargerSelect()" style="border-color:#3182ce;font-weight:500">
+              <option value="">— Select charger model —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Site / installation description</label>
+            <input id="qsite" placeholder="e.g. Garage, Flat 4B — wall mount">
+          </div>
+        </div>
+        <div class="two-col" style="margin-bottom:0">
+          <div class="form-group">
+            <label>Cable type for extra run (Section B)</label>
+            <select id="qcable" onchange="calcQ()" style="border-color:#ed8936">
+              <option value="">— Auto-set by model —</option>
+            </select>
+          </div>
+          <div id="model-info-pill" style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
+            <div style="display:none" id="model-badges">
+              <span id="pill-kw" style="font-size:13px;font-weight:700;color:var(--blue)">—</span>
+              <span id="pill-phase" style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--blue-bg);color:var(--blue-text);margin-left:6px">—</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3)" id="model-hint">Select a charger model to auto-populate the BoM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION A: Base installation — item-wise breakup -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Section A — Bill of Materials (BoM) — I&amp;C cost</div>
+            <div class="card-sub">All I&C components from Pricing Manager. Set qty per item, toggle to include/exclude. Rates update automatically when admin changes pricing.</div>
+          </div>
+          <div style="text-align:right">
+            <div id="secA-total-badge" style="font-size:16px;font-weight:700;color:var(--blue)">₹0</div>
+            <div id="secA-item-count" style="font-size:11px;color:var(--text3);margin-top:2px">0 items</div>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table style="font-size:12px">
+            <thead>
+              <tr>
+                <th style="width:4%">#</th>
+                <th style="width:36%">Item / component</th>
+                <th style="width:9%">Unit</th>
+                <th style="width:10%">Qty</th>
+                <th style="width:14%">Rate (₹)</th>
+                <th style="width:14%">Amount (₹)</th>
+                <th style="width:13%">Include</th>
+              </tr>
+            </thead>
+            <tbody id="breakup-tbody"></tbody>
+            <tfoot>
+              <tr style="background:#eff6ff">
+                <td colspan="5" style="font-weight:700;font-size:13px;text-align:right;padding:10px 12px;color:#1e40af">Section A Total (excl. GST)</td>
+                <td style="font-weight:700;font-size:14px;color:#1e40af;padding:10px 12px" id="secA-foot-total">₹0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION B: Cable — site measurement -->
+      <div class="card" style="border-left:4px solid #ed8936">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Section B — Cable supply &amp; laying (site measurement)</div>
+            <div class="card-sub">Enter the actual cable length measured at site — full length is charged at the selected cable rate</div>
+          </div>
+          <div id="secB-total-badge" style="font-size:16px;font-weight:700;color:#dd6b20">₹0</div>
+        </div>
+        <div style="display:grid;grid-template-columns:200px 200px 1fr;gap:16px;align-items:end;margin-bottom:14px">
+          <div class="form-group">
+            <label>Cable length at site (metres) <span class="required">*</span></label>
+            <input type="number" id="qrun" value="" placeholder="Enter metres" min="0" max="500" oninput="calcQ()"
+              style="border-color:#ed8936;background:#fffbeb">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Total cable billed</div>
+            <div id="extra-metres-badge" style="font-size:20px;font-weight:700;color:#dd6b20;line-height:1">—</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">metres × rate per metre</div>
+          </div>
+          <div id="secB-zero-msg" style="font-size:12px;color:var(--text3);font-style:italic;padding-bottom:4px">
+            <i class="ti ti-info-circle" style="font-size:14px;margin-right:4px"></i>Enter cable length above to calculate Section B cost
+          </div>
+          <div id="secB-no-cable" style="font-size:12px;color:#718096;font-style:italic;padding-bottom:4px;display:none">
+            <i class="ti ti-info-circle" style="font-size:14px;margin-right:4px;color:#718096"></i>Select a cable type in the scope card above to enable Section B pricing
+          </div>
+        </div>
+        <div class="tbl-wrap" id="secB-table-wrap">
+          <table style="font-size:12px">
+            <thead>
+              <tr>
+                <th style="width:5%">#</th>
+                <th style="width:40%">Cable description</th>
+                <th style="width:10%">Unit</th>
+                <th style="width:10%">Length (m)</th>
+                <th style="width:15%">Rate (₹/m)</th>
+                <th style="width:20%">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="cable-breakup-tbody"></tbody>
+            <tfoot>
+              <tr style="background:#fff7ed">
+                <td colspan="5" style="font-weight:700;font-size:13px;text-align:right;padding:10px 12px;color:#dd6b20">Section B Total (excl. GST)</td>
+                <td style="font-weight:700;font-size:14px;color:#dd6b20;padding:10px 12px" id="secB-foot-total">₹0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION C: Optional items -->
+      <div class="card" style="border-left:4px solid #805ad5">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Section C — Optional items (as per site requirement)</div>
+            <div class="card-sub">Toggle items on/off — included optional items are added to the final quotation total</div>
+          </div>
+          <div id="secC-total-badge" style="font-size:16px;font-weight:700;color:#805ad5">₹0</div>
+        </div>
+        <div class="tbl-wrap">
+          <table style="font-size:12px">
+            <thead>
+              <tr>
+                <th style="width:5%">#</th>
+                <th style="width:35%">Optional item</th>
+                <th style="width:10%">Unit</th>
+                <th style="width:10%">Qty</th>
+                <th style="width:15%">Rate (₹)</th>
+                <th style="width:15%">Amount (₹)</th>
+                <th style="width:10%">Include</th>
+              </tr>
+            </thead>
+            <tbody id="optional-tbody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="openAddOptional()" style="border-color:#805ad5;color:#805ad5"><i class="ti ti-plus"></i>Add custom optional item</button>
+          <span style="font-size:11px;color:var(--text3)">Custom items are specific to this quote only</span>
+        </div>
+      </div>
+
+      <!-- FINAL QUOTATION SUMMARY -->
+      <div class="card" style="border:2px solid #3182ce">
+        <div class="card-header">
+          <div class="card-title" style="font-size:15px">Final quotation summary</div>
+        </div>
+
+        <!-- Section totals breakdown -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px">
+            <div style="font-size:11px;color:#1e40af;font-weight:600;margin-bottom:4px">SECTION A</div>
+            <div style="font-size:11px;color:#3b82f6;margin-bottom:6px">I&amp;C BoM total</div>
+            <div style="font-size:18px;font-weight:700;color:#1e40af" id="summary-secA">₹0</div>
+          </div>
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px">
+            <div style="font-size:11px;color:#dd6b20;font-weight:600;margin-bottom:4px">SECTION B</div>
+            <div style="font-size:11px;color:#ed8936;margin-bottom:6px">Cable supply &amp; laying</div>
+            <div style="font-size:18px;font-weight:700;color:#dd6b20" id="summary-secB">₹0</div>
+          </div>
+          <div style="background:#faf5ff;border:1px solid #d9b8f7;border-radius:8px;padding:12px">
+            <div style="font-size:11px;color:#805ad5;font-weight:600;margin-bottom:4px">SECTION C</div>
+            <div style="font-size:11px;color:#9f7aea;margin-bottom:6px">Optional items</div>
+            <div style="font-size:18px;font-weight:700;color:#805ad5" id="summary-secC">₹0</div>
+          </div>
+        </div>
+
+        <!-- Totals -->
+        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div class="q-line"><span>Section A — I&amp;C (BoM)</span><span id="ft-secA">₹0</span></div>
+          <div class="q-line"><span id="ft-secB-lbl">Section B — Cable supply &amp; laying</span><span id="ft-secB">₹0</span></div>
+          <div class="q-line"><span id="ft-secC-lbl">Section C — Optional items (0 selected)</span><span id="ft-secC">₹0</span></div>
+          <div class="q-line bold"><span>Subtotal (excl. GST)</span><span id="qt-sub">₹0</span></div>
+          <div class="q-line"><span>GST @ 18%</span><span id="qt-gst">₹0</span></div>
+          <div class="q-line total-line"><span>Grand total (incl. GST)</span><span id="qt-tot">₹0</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:6px">
+        <button class="btn" onclick="submitQ('Draft')"><i class="ti ti-file"></i>Save as draft</button>
+        <button class="btn btn-warning" onclick="submitQ('Pending review')"><i class="ti ti-send"></i>Submit for approval</button>
+      </div>
+      <p style="text-align:right;font-size:12px;color:var(--text3)">Quote will be reviewed by admin before being sent to the customer</p>
+    </div>
+
+    <!-- ═══ MY QUOTES ═══ -->
+    <div class="sec" id="sec-myq">
+      <div id="revision-banner" style="display:none"></div>
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">My quotes</div><div class="card-sub">Track submissions, approvals and revision requests</div></div><button class="btn btn-primary btn-sm" onclick="nav('newq')"><i class="ti ti-plus"></i>New quote</button></div>
+        <div id="myq-list"></div>
+      </div>
+    </div>
+
+
+    <!-- ═══ CHARGER MODELS ═══ -->
+    <div class="sec" id="sec-chargers">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Charger models — component mapping</div>
+            <div class="card-sub">Define which components auto-populate in the BoM when a charger is selected in a quote</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddCharger()"><i class="ti ti-plus"></i>Add model</button>
+        </div>
+        <div id="charger-model-list"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+
+<!-- ADD / EDIT CHARGER MODEL MODAL -->
+<div class="modal-overlay" id="modal-charger">
+  <div class="modal" style="width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="charger-modal-title"><i class="ti ti-bolt"></i>Add charger model</div>
+    <input type="hidden" id="charger-edit-id" value="">
+    <div class="two-col" style="margin-bottom:12px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Model name <span class="required">*</span></label>
+        <input id="charger-name" placeholder="e.g. AC 11kW Type 2 – CU Cable (Three Phase)">
+      </div>
+    </div>
+    <div class="three-col" style="margin-bottom:14px">
+      <div class="form-group">
+        <label>Power (kW)</label>
+        <input type="number" id="charger-kw" placeholder="e.g. 11" min="0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>Phase</label>
+        <select id="charger-phase">
+          <option value="1-Ph">1-Ph (Single Phase)</option>
+          <option value="3-Ph">3-Ph (Three Phase)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cable type (for extra run)</label>
+        <select id="charger-cable"></select>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.04em">
+      <i class="ti ti-list-check" style="font-size:16px"></i>Component mapping
+      <span style="font-size:11px;font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— set default qty for each component. Set 0 or uncheck to exclude.</span>
+    </div>
+    <div id="charger-comp-list" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-charger')">Cancel</button>
+      <button class="btn btn-success" onclick="saveChargerModel()"><i class="ti ti-check"></i>Save model</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD OPTIONAL ITEM MODAL -->
+<div class="modal-overlay" id="modal-optional">
+  <div class="modal">
+    <div class="modal-title" style="color:#805ad5"><i class="ti ti-plus"></i>Add custom optional item</div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Item description <span class="required">*</span></label>
+      <input id="opt-name" placeholder="e.g. Additional conduit run, wall drilling, etc.">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:4px">
+      <div class="form-group">
+        <label>Unit</label>
+        <select id="opt-unit">
+          <option>Unit</option><option>Metre</option><option>Set</option><option>Visit</option><option>Sqm</option><option>LS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Qty</label>
+        <input type="number" id="opt-qty" value="1" min="1">
+      </div>
+      <div class="form-group">
+        <label>Rate (₹) <span class="required">*</span></label>
+        <input type="number" id="opt-rate" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-optional')">Cancel</button>
+      <button class="btn btn-success" onclick="saveOptionalItem()"><i class="ti ti-check"></i>Add to quote</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT COMPONENT MODAL -->
+<div class="modal-overlay" id="modal-comp">
+  <div class="modal">
+    <div class="modal-title" id="comp-modal-title"><i class="ti ti-tag"></i>Add component</div>
+    <input type="hidden" id="comp-edit-idx" value="-1">
+    <div class="two-col" style="margin-bottom:12px">
+      <div class="form-group" style="grid-column:1/-1"><label>Component name <span class="required">*</span></label><input id="comp-name" placeholder="e.g. 25A 4P MCB – Havells"></div>
+    </div>
+    <div class="three-col" style="margin-bottom:4px">
+      <div class="form-group">
+        <label>Category <span class="required">*</span></label>
+        <select id="comp-cat">
+          <option value="">— Select —</option>
+          <option>Service</option><option>MCB</option><option>Enclosure</option>
+          <option>Cable</option><option>Conduit</option><option>Accessories</option>
+          <option>Earthing</option><option>Logistics</option><option>Panel</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Unit <span class="required">*</span></label>
+        <select id="comp-unit">
+          <option value="">— Select —</option>
+          <option>Unit</option><option>Metre</option><option>Set</option>
+          <option>Visit</option><option>Sqm</option><option>Kg</option><option>LS</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Rate (₹) <span class="required">*</span></label><input type="number" id="comp-rate" placeholder="0" min="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-comp')">Cancel</button>
+      <button class="btn btn-success" onclick="saveComp()"><i class="ti ti-check"></i>Save component</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT CABLE MODAL -->
+<div class="modal-overlay" id="modal-cable">
+  <div class="modal" style="width:520px">
+    <div class="modal-title" id="cable-modal-title"><i class="ti ti-plug"></i>Add cable type</div>
+    <input type="hidden" id="cable-edit-idx" value="-1">
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Cable name / specification <span class="required">*</span></label>
+      <input id="cable-name" placeholder="e.g. 3Cx16sqmm Cu FRLS – Polycab/KEI">
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Used in charger model</label>
+      <input id="cable-used" placeholder="e.g. 22kW upgrade runs &gt;90m">
+    </div>
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:4px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-calculator" style="font-size:16px;color:#3182ce"></i>
+        Pricing — list price &amp; discount
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:10px">
+        <div class="form-group">
+          <label>List price (₹/m) <span class="required">*</span></label>
+          <input type="number" id="cable-list" placeholder="e.g. 320" min="0" oninput="updateCablePreview()" style="background:#fff8e1;border-color:#f6e05e">
+        </div>
+        <div class="form-group">
+          <label>Discount (%) <span class="required">*</span></label>
+          <input type="number" id="cable-disc" placeholder="e.g. 16" min="0" max="100" oninput="updateCablePreview()" style="background:#f0fff4;border-color:#9ae6b4">
+        </div>
+        <div class="form-group">
+          <label>Net rate (₹/m)</label>
+          <div id="cable-net-preview" style="padding:8px 11px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:16px;font-weight:700;color:#1e40af;min-height:36px;display:flex;align-items:center">—</div>
+        </div>
+      </div>
+      <div id="cable-discount-summary" style="display:none;font-size:12px;padding:8px 10px;background:#f0fff4;border:1px solid #9ae6b4;border-radius:6px;color:#276749"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-cable')">Cancel</button>
+      <button class="btn btn-success" onclick="saveCable()"><i class="ti ti-check"></i>Save cable type</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUPABASE CONFIG MODAL -->
+<div class="modal-overlay" id="modal-setup">
+  <div class="modal" style="width:520px">
+    <div class="modal-title" style="color:#3182ce"><i class="ti ti-database"></i>Database Setup — Supabase + Vercel</div>
+    <div style="background:#ebf4ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:12px;color:#1e40af;margin-bottom:14px;line-height:1.6">
+      <b>One-time setup.</b> Paste your Supabase and Vercel credentials below. Saved in your browser — never leaves your device.
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Supabase Project URL <span class="required">*</span></label>
+      <input id="cfg-sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co" style="font-family:var(--font-mono);font-size:12px">
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Supabase Anon Key <span class="required">*</span></label>
+      <input id="cfg-sb-key" placeholder="eyJhbGciOiJIUzI1NiIs..." style="font-family:var(--font-mono);font-size:12px">
+      <div style="font-size:11px;color:var(--text3);margin-top:3px">Supabase → Settings → API → anon public key</div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Vercel App URL (for Word export)</label>
+      <input id="cfg-vk-url" placeholder="https://your-app.vercel.app" style="font-family:var(--font-mono);font-size:12px">
+      <div style="font-size:11px;color:var(--text3);margin-top:3px">Your Vercel deployment URL — enables .docx Word export</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-setup')">Cancel</button>
+      <button class="btn btn-primary" onclick="testConnection()"><i class="ti ti-plug"></i>Test connection</button>
+      <button class="btn btn-success" onclick="saveConfig()"><i class="ti ti-check"></i>Save & connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- APPROVE MODAL -->
+<div class="modal-overlay" id="modal-approve">
+  <div class="modal">
+    <div class="modal-title" style="color:#38a169"><i class="ti ti-shield-check"></i>Approve quote</div>
+    <div id="modal-approve-preview"></div>
+    <div class="form-group" style="margin-top:12px"><label>Note to sales team (optional)</label><textarea id="approve-note" placeholder="e.g. Approved as submitted — proceed to send to customer"></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-approve')">Cancel</button><button class="btn btn-success" onclick="confirmApprove()"><i class="ti ti-check"></i>Confirm approval</button></div>
+  </div>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="modal-overlay" id="modal-reject">
+  <div class="modal">
+    <div class="modal-title" style="color:#ed8936"><i class="ti ti-refresh"></i>Request revision</div>
+    <div id="modal-reject-preview"></div>
+    <div class="form-group" style="margin-top:12px"><label>Revision instructions <span class="required">*</span></label><textarea id="reject-reason" placeholder="e.g. Cable run seems too short for this site — please verify with customer. Also confirm earthing requirement."></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-reject')">Cancel</button><button class="btn btn-warning" onclick="confirmReject()"><i class="ti ti-send"></i>Send back for revision</button></div>
+  </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal-overlay" id="modal-history">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-clock"></i>Quote history</div>
+    <div id="modal-history-body"></div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('modal-history')">Close</button></div>
+  </div>
+</div>
+
+<script>
+const F = v => '₹' + Math.round(v).toLocaleString('en-IN');
+let role = 'admin', activeQId = null;
+
+const defaultPrices = [
+  {id:'survey',   name:'Site survey & feasibility',         cat:'Service',     unit:'Visit', rate:1200},
+  {id:'ic',       name:'Installation & commissioning',      cat:'Service',     unit:'Visit', rate:2500},
+  {id:'transport',name:'Material transport (within 40km)',  cat:'Logistics',   unit:'Unit',  rate:800},
+  {id:'mcb2p',    name:'40A 2P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:850},
+  {id:'mcb4p25',  name:'25A 4P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:1100},
+  {id:'mcb4p40',  name:'40A 4P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:1250},
+  {id:'box2p',    name:'Grasp 2P IP65 MCB box',             cat:'Enclosure',   unit:'Unit',  rate:650},
+  {id:'box4p',    name:'Grasp 4P IP65 MCB box',             cat:'Enclosure',   unit:'Unit',  rate:850},
+  {id:'acc',      name:'Cable glands, lugs & accessories',  cat:'Accessories', unit:'Set',   rate:550},
+  {id:'conduit',  name:'Polyamide conduit with clamps',     cat:'Conduit',     unit:'Metre', rate:85},
+  {id:'earth',    name:'Chemical earthing (17.2mm Cu rod)', cat:'Earthing',    unit:'Unit',  rate:8500},
+  {id:'xvisit',   name:'Extra visit charge',                cat:'Service',     unit:'Visit', rate:1500},
+  {id:'dbpanel',  name:'DB panel installation (OEM)',       cat:'Panel',       unit:'Unit',  rate:1200},
+];
+let prices = JSON.parse(JSON.stringify(defaultPrices));
+
+const defaultCables = [
+  {id:'cu3x10', name:'3Cx10sqmm Cu FRLS',        used:'7.5kW CU',      listPrice:220, discount:16, rate:185},
+  {id:'cu5x6',  name:'5Cx6sqmm Cu flexible',     used:'11kW CU Var-1', listPrice:250, discount:16, rate:210},
+  {id:'cu5x10', name:'5Cx10sqmm Cu flexible',    used:'22kW CU',       listPrice:335, discount:16, rate:282},
+  {id:'al4x10', name:'4Cx10sqmm Al XLPE',        used:'11kW AL',       listPrice:145, discount:17, rate:120},
+  {id:'cuearth',name:'1Cx6sqmm Cu earthing',     used:'AL variants',   listPrice:115, discount:17, rate:95},
+  {id:'cu3x16', name:'3Cx16sqmm Cu (run >90m)',  used:'7.5kW upgrade', listPrice:320, discount:17, rate:266},
+  {id:'cu5x16', name:'5Cx16sqmm Cu (run >90m)',  used:'22kW upgrade',  listPrice:410, discount:17, rate:340},
+];
+let cables = JSON.parse(JSON.stringify(defaultCables));
+
+/* ── Charger model definitions with component mapping ── */
+const defaultChargerModels = [
+  {
+    id:'cm1', name:'AC 7.5kW Type 2 (Single Phase)',  kw:7.5,  phase:'1-Ph',
+    cableKey:'cu3x10',
+    components:[
+      {pk:'survey',    qty:1},
+      {pk:'mcb2p',     qty:1},
+      {pk:'box2p',     qty:1},
+      {pk:'acc',       qty:1},
+      {pk:'conduit',   qty:1},
+      {pk:'transport', qty:1},
+      {pk:'ic',        qty:1},
+    ]
+  },
+  {
+    id:'cm2', name:'AC 11kW Type 2 – CU Cable (Three Phase)',  kw:11,  phase:'3-Ph',
+    cableKey:'cu5x6',
+    components:[
+      {pk:'survey',    qty:1},
+      {pk:'mcb4p25',   qty:1},
+      {pk:'box4p',     qty:1},
+      {pk:'acc',       qty:1},
+      {pk:'conduit',   qty:1},
+      {pk:'transport', qty:1},
+      {pk:'ic',        qty:1},
+    ]
+  },
+  {
+    id:'cm3', name:'AC 11kW Type 2 – AL Cable (Three Phase)',  kw:11,  phase:'3-Ph',
+    cableKey:'al4x10',
+    components:[
+      {pk:'survey',    qty:1},
+      {pk:'mcb4p25',   qty:1},
+      {pk:'box4p',     qty:1},
+      {pk:'acc',       qty:1},
+      {pk:'transport', qty:1},
+      {pk:'ic',        qty:1},
+    ]
+  },
+  {
+    id:'cm4', name:'AC 22kW Type 2 – CU Cable (Three Phase)',  kw:22,  phase:'3-Ph',
+    cableKey:'cu5x10',
+    components:[
+      {pk:'survey',    qty:1},
+      {pk:'mcb4p40',   qty:1},
+      {pk:'box4p',     qty:1},
+      {pk:'acc',       qty:1},
+      {pk:'conduit',   qty:1},
+      {pk:'transport', qty:1},
+      {pk:'ic',        qty:1},
+    ]
+  },
+];
+let chargerModels = JSON.parse(JSON.stringify(defaultChargerModels));
+
+
+
+const addons = [
+  {id:'earth',  name:'Chemical earthing (17.2mm Cu rod)',       pk:'earth',   def:false},
+  {id:'xvisit', name:'Extra visit charge',                      pk:'xvisit',  def:false},
+  {id:'dbpanel',name:'DB panel installation (OEM-supplied)',    pk:'dbpanel', def:false},
+];
+let aoState = {};
+
+let quotes = [];
+
+function getR(id)  { return (prices.find(p => p.id === id) || {rate: 0}).rate; }
+function getCR(id) {
+  const c = cables.find(c => c.id === id);
+  if (!c) return 0;
+  if (c.listPrice && c.discount !== undefined) {
+    return Math.round(c.listPrice * (1 - c.discount / 100));
+  }
+  return c.rate || 0;
+}
+
+function statusTag(s) {
+  const cls = {Draft:'tag-gray','Pending review':'tag-amber','Revision needed':'tag-purple',Approved:'tag-green',Sent:'tag-blue'};
+  const ico  = {Draft:'ti-file','Pending review':'ti-clock','Revision needed':'ti-refresh',Approved:'ti-check',Sent:'ti-send'};
+  return `<span class="tag ${cls[s]||'tag-gray'}"><i class="ti ${ico[s]||'ti-file'}" style="font-size:11px"></i> ${s}</span>`;
+}
+
+function pendingQ() { return quotes.filter(q => q.status === 'Pending review'); }
+
+function updateBadges() {
+  const p = pendingQ().length;
+  document.getElementById('appr-badge').textContent = p;
+  document.getElementById('allq-badge').textContent = quotes.length;
+  document.getElementById('myq-badge').textContent  = quotes.filter(q => q.by === 'Rahul Sharma').length;
+  document.getElementById('m-pend').textContent = p;
+  document.getElementById('m-appr').textContent = quotes.filter(q => q.status === 'Approved').length;
+  document.getElementById('m-sent').textContent = quotes.filter(q => q.status === 'Sent').length;
+  const val = quotes.filter(q => ['Approved','Sent'].includes(q.status)).reduce((s,q) => s+q.total, 0);
+  document.getElementById('m-val').textContent = val >= 100000 ? '₹' + (val/100000).toFixed(1) + 'L' : F(val);
+  const statusCounts = {Draft:0,'Pending review':0,'Revision needed':0,Approved:0,Sent:0};
+  quotes.forEach(q => { if(statusCounts[q.status] !== undefined) statusCounts[q.status]++; });
+  document.getElementById('ps-draft').textContent = statusCounts['Draft'];
+  document.getElementById('ps-pend').textContent  = statusCounts['Pending review'];
+  document.getElementById('ps-rev').textContent   = statusCounts['Revision needed'];
+  document.getElementById('ps-appr').textContent  = statusCounts['Approved'];
+  document.getElementById('ps-sent').textContent  = statusCounts['Sent'];
+  document.getElementById('team-rahul-count').textContent = quotes.filter(q => q.by === 'Rahul Sharma').length;
+}
+
+function renderDashboard() {
+  const pq = pendingQ();
+  document.getElementById('dash-pend-tbody').innerHTML = pq.length
+    ? pq.map(q => `<tr>
+        <td style="font-weight:700;color:var(--blue)">${q.id}</td>
+        <td>${q.customer}</td>
+        <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.model}</td>
+        <td>${q.run}m</td>
+        <td style="font-weight:700">${F(q.total)}</td>
+        <td>${q.by}</td>
+        <td><button class="btn btn-warning btn-sm" onclick="openApproveModal('${q.id}')"><i class="ti ti-shield-check"></i>Review</button></td>
+      </tr>`).join('')
+    : `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text3)">No pending approvals</td></tr>`;
+  document.getElementById('dash-recent-tbody').innerHTML = quotes.slice(0,4).map(q => `<tr>
+    <td style="font-weight:700;color:var(--blue)">${q.id}</td>
+    <td>${q.customer}</td>
+    <td style="font-size:12px">${q.model.split('–')[0].trim()}</td>
+    <td style="font-weight:700">${F(q.total)}</td>
+    <td style="font-size:12px">${q.by}</td>
+    <td>${statusTag(q.status)}</td>
+  </tr>`).join('');
+}
+
+function renderApprovals() {
+  const pq = pendingQ();
+  document.getElementById('appr-empty').style.display = pq.length ? 'none' : 'block';
+  document.getElementById('appr-list').innerHTML = pq.map(q => `
+    <div class="review-card">
+      <div class="rc-top">
+        <div>
+          <div class="rc-id">${q.id} · Submitted ${q.date} by ${q.by}</div>
+          <div class="rc-name">${q.customer}</div>
+          <div class="rc-meta">${q.addr} · ${q.phone || ''}</div>
+        </div>
+        <div style="text-align:right">
+          ${statusTag(q.status)}
+          <div class="rc-amount" style="margin-top:6px">${F(q.total)}</div>
+          <div style="font-size:12px;color:var(--text3)">incl. 18% GST</div>
+        </div>
+      </div>
+      <div class="rc-grid">
+        <div class="rc-item"><label>Model</label><span>${q.model.split('–')[0].trim()}</span></div>
+        <div class="rc-item"><label>Cable run</label><span>${q.run} metres</span></div>
+        <div class="rc-item"><label>Qty</label><span>${q.qty} unit${q.qty>1?'s':''}</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 0;border-top:1px dashed var(--border)">
+        <div style="background:#eff6ff;border-radius:6px;padding:9px 11px">
+          <div style="font-size:10px;font-weight:700;color:#1e40af;margin-bottom:3px">SEC A — Base install</div>
+          <div style="font-size:15px;font-weight:700;color:#1e40af">${F(q.secA||q.base)}</div>
+        </div>
+        <div style="background:#fff7ed;border-radius:6px;padding:9px 11px">
+          <div style="font-size:10px;font-weight:700;color:#dd6b20;margin-bottom:3px">SEC B — Extra cable</div>
+          <div style="font-size:15px;font-weight:700;color:#dd6b20">${F(q.secB||q.cableX)}</div>
+        </div>
+        <div style="background:#faf5ff;border-radius:6px;padding:9px 11px">
+          <div style="font-size:10px;font-weight:700;color:#805ad5;margin-bottom:3px">SEC C — Optional</div>
+          <div style="font-size:15px;font-weight:700;color:#805ad5">${F(q.secC||q.aoTotal)}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0;border-top:1px solid var(--border)">
+        <div class="rc-item"><label>Subtotal (excl. GST)</label><span>${F(q.sub)}</span></div>
+        <div class="rc-item"><label>GST @ 18%</label><span>${F(q.gst)}</span></div>
+        <div class="rc-item" style="grid-column:1/-1"><label>Grand total (incl. GST)</label><span style="font-size:16px;color:var(--blue)">${F(q.total)}</span></div>
+      </div>
+      ${q.history.slice(-1)[0].note ? `<div class="rc-note"><i class="ti ti-message" style="font-size:13px;margin-right:5px"></i>"${q.history.slice(-1)[0].note}"</div>` : ''}
+      <div class="rc-actions">
+        <button class="btn btn-success" onclick="openApproveModal('${q.id}')"><i class="ti ti-check"></i>Approve quote</button>
+        <button class="btn btn-warning" onclick="openRejectModal('${q.id}')"><i class="ti ti-refresh"></i>Request revision</button>
+        <button class="btn" onclick="showHistory('${q.id}')"><i class="ti ti-clock"></i>View history</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderAllQ(filter='') {
+  const qs = filter ? quotes.filter(q => q.status === filter) : quotes;
+  document.getElementById('allq-tbody').innerHTML = qs.map(q => `<tr>
+    <td style="font-weight:700;color:var(--blue)">${q.id}</td>
+    <td>${q.customer}</td>
+    <td style="font-size:12px;color:var(--text3)">${q.addr}</td>
+    <td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.model.split('–')[0].trim()}</td>
+    <td>${q.run}m</td>
+    <td style="font-weight:700">${F(q.total)}</td>
+    <td style="font-size:12px">${q.by.split(' ')[0]}</td>
+    <td style="font-size:12px;color:var(--text3)">${q.date}</td>
+    <td>${statusTag(q.status)}</td>
+    <td style="display:flex;gap:4px">
+      <button class="btn btn-icon btn-sm" onclick="showHistory('${q.id}')" title="View history"><i class="ti ti-clock"></i></button>
+      ${(q.status==='Approved'||q.status==='Sent')?`<button class="btn btn-icon btn-sm" onclick="exportWord('${q.id}')" title="Export Word" style="border-color:#2b6cb0;color:#2b6cb0"><i class="ti ti-file-word"></i></button>`:''}
+    </td>
+  </tr>`).join('');
+}
+
+function renderPricing() {
+  const catColors = {Service:'tag-blue',MCB:'tag-amber',Enclosure:'tag-gray',Cable:'tag-blue',
+    Conduit:'tag-gray',Accessories:'tag-gray',Earthing:'tag-green',Logistics:'tag-gray',Panel:'tag-purple',Other:'tag-gray'};
+  document.getElementById('price-tbody').innerHTML = prices.map((p,i) => `
+    <tr id="prow-${i}">
+      <td>
+        <input style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:500;background:var(--surface);color:var(--text)"
+          value="${p.name.replace(/"/g,'&quot;')}" onchange="prices[${i}].name=this.value" placeholder="Component name">
+      </td>
+      <td>
+        <select style="padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text)"
+          onchange="prices[${i}].cat=this.value">
+          ${['Service','MCB','Enclosure','Cable','Conduit','Accessories','Earthing','Logistics','Panel','Other']
+            .map(c=>`<option value="${c}" ${p.cat===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select style="padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text)"
+          onchange="prices[${i}].unit=this.value">
+          ${['Unit','Metre','Set','Visit','Sqm','Kg','LS']
+            .map(u=>`<option value="${u}" ${p.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </td>
+      <td><input class="price-inp" type="number" value="${p.rate}" onchange="prices[${i}].rate=+this.value" min="0"></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="editComp(${i})" title="Edit"><i class="ti ti-edit"></i>Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteComp(${i})" title="Delete"><i class="ti ti-trash"></i>Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('cable-tbody').innerHTML = cables.map((c,i) => {
+    const lp  = c.listPrice || c.rate || 0;
+    const dis = c.discount !== undefined ? c.discount : 0;
+    const net = Math.round(lp * (1 - dis / 100));
+    const saved = Math.round(lp - net);
+    const pct   = lp > 0 ? Math.round((saved / lp) * 100) : 0;
+    const netColor = dis >= 20 ? '#38a169' : dis >= 10 ? '#d69e2e' : '#3182ce';
+    return `<tr>
+      <td>
+        <input style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;background:var(--surface);color:var(--text)"
+          value="${c.name.replace(/"/g,'&quot;')}" onchange="cables[${i}].name=this.value;renderPricing()" placeholder="Cable name">
+      </td>
+      <td>
+        <input style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;background:var(--surface);color:var(--text)"
+          value="${c.used.replace(/"/g,'&quot;')}" onchange="cables[${i}].used=this.value" placeholder="Model">
+      </td>
+      <td>
+        <input class="price-inp" type="number" value="${lp}"
+          style="width:80px;background:#fff8e1;border-color:#f6e05e;font-weight:600"
+          onchange="cables[${i}].listPrice=+this.value;if(!cables[${i}].discount)cables[${i}].discount=0;renderPricing()" min="0" title="Vendor list price">
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input class="price-inp" type="number" value="${dis}"
+            style="width:60px;background:#f0fff4;border-color:#9ae6b4;font-weight:600;color:#276749"
+            onchange="cables[${i}].discount=+this.value;if(+this.value>100)this.value=100;cables[${i}].discount=Math.min(100,+this.value);renderPricing()" min="0" max="100" title="Discount %">
+          <span style="font-size:11px;color:var(--text3)">%</span>
+        </div>
+      </td>
+      <td>
+        <div style="font-size:14px;font-weight:700;color:${netColor}">₹${net.toLocaleString('en-IN')}</div>
+        <div style="font-size:10px;color:var(--text3)">per metre</div>
+      </td>
+      <td>
+        <div style="font-size:12px;font-weight:600;color:#38a169">₹${saved.toLocaleString('en-IN')}</div>
+        <div style="font-size:10px;color:var(--text3)">${pct}% off list</div>
+      </td>
+      <td>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="editCable(${i})"><i class="ti ti-edit"></i>Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteCable(${i})"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Component CRUD ── */
+function openAddComp() {
+  document.getElementById('comp-modal-title').innerHTML = '<i class="ti ti-tag"></i>Add new component';
+  document.getElementById('comp-edit-idx').value = -1;
+  document.getElementById('comp-name').value = '';
+  document.getElementById('comp-cat').value  = '';
+  document.getElementById('comp-unit').value = '';
+  document.getElementById('comp-rate').value = '';
+  document.getElementById('modal-comp').classList.add('open');
+}
+function editComp(i) {
+  const p = prices[i];
+  document.getElementById('comp-modal-title').innerHTML = '<i class="ti ti-edit"></i>Edit component';
+  document.getElementById('comp-edit-idx').value = i;
+  document.getElementById('comp-name').value = p.name;
+  document.getElementById('comp-cat').value  = p.cat;
+  document.getElementById('comp-unit').value = p.unit;
+  document.getElementById('comp-rate').value = p.rate;
+  document.getElementById('modal-comp').classList.add('open');
+}
+function saveComp() {
+  const name = document.getElementById('comp-name').value.trim();
+  const cat  = document.getElementById('comp-cat').value;
+  const unit = document.getElementById('comp-unit').value;
+  const rate = +document.getElementById('comp-rate').value;
+  if (!name) { showToast('Please enter a component name', 'error'); return; }
+  if (!cat)  { showToast('Please select a category', 'error'); return; }
+  if (!unit) { showToast('Please select a unit', 'error'); return; }
+  const idx = +document.getElementById('comp-edit-idx').value;
+  if (idx >= 0) {
+    prices[idx] = { ...prices[idx], name, cat, unit, rate };
+    showToast('Component updated');
+  } else {
+    const id = 'comp_' + Date.now();
+    prices.push({ id, name, cat, unit, rate });
+    showToast('Component added');
+  }
+  closeModal('modal-comp');
+  renderPricing();
+  renderAddonList();
+}
+function deleteComp(i) {
+  if (!confirm('Delete "' + prices[i].name + '"?')) return;
+  prices.splice(i, 1);
+  renderPricing();
+  showToast('Component deleted');
+}
+
+/* ── Cable CRUD ── */
+function updateCablePreview() {
+  const lp  = +document.getElementById('cable-list').value || 0;
+  const dis = +document.getElementById('cable-disc').value || 0;
+  const net = Math.round(lp * (1 - dis / 100));
+  const saved = Math.round(lp - net);
+  const preview = document.getElementById('cable-net-preview');
+  const summary = document.getElementById('cable-discount-summary');
+  if (lp > 0) {
+    preview.textContent = '₹' + net.toLocaleString('en-IN');
+    summary.style.display = 'block';
+    summary.innerHTML = '<i class="ti ti-circle-check" style="margin-right:5px;font-size:13px"></i>' +
+      'Saving <strong>₹' + saved.toLocaleString('en-IN') + '/m</strong> (' + Math.round((saved/lp)*100) + '% off list) — ' +
+      'net rate <strong>₹' + net.toLocaleString('en-IN') + '/m</strong> will be used in all quote calculations.';
+  } else {
+    preview.textContent = '—';
+    summary.style.display = 'none';
+  }
+}
+function openAddCable() {
+  document.getElementById('cable-modal-title').innerHTML = '<i class="ti ti-plug"></i>Add cable type';
+  document.getElementById('cable-edit-idx').value = -1;
+  document.getElementById('cable-name').value = '';
+  document.getElementById('cable-used').value = '';
+  document.getElementById('cable-list').value = '';
+  document.getElementById('cable-disc').value = '';
+  document.getElementById('cable-net-preview').textContent = '—';
+  document.getElementById('cable-discount-summary').style.display = 'none';
+  document.getElementById('modal-cable').classList.add('open');
+}
+function editCable(i) {
+  const c = cables[i];
+  document.getElementById('cable-modal-title').innerHTML = '<i class="ti ti-edit"></i>Edit cable type';
+  document.getElementById('cable-edit-idx').value = i;
+  document.getElementById('cable-name').value = c.name;
+  document.getElementById('cable-used').value = c.used;
+  document.getElementById('cable-list').value = c.listPrice || c.rate || '';
+  document.getElementById('cable-disc').value = c.discount !== undefined ? c.discount : 0;
+  updateCablePreview();
+  document.getElementById('modal-cable').classList.add('open');
+}
+function saveCable() {
+  const name = document.getElementById('cable-name').value.trim();
+  const used = document.getElementById('cable-used').value.trim();
+  const listPrice = +document.getElementById('cable-list').value;
+  const discount  = +document.getElementById('cable-disc').value;
+  if (!name)      { showToast('Please enter a cable name', 'error'); return; }
+  if (!listPrice) { showToast('Please enter list price', 'error'); return; }
+  const rate = Math.round(listPrice * (1 - discount / 100));
+  const idx  = +document.getElementById('cable-edit-idx').value;
+  if (idx >= 0) {
+    cables[idx] = { ...cables[idx], name, used, listPrice, discount, rate };
+    showToast('Cable type updated — net rate ₹' + rate.toLocaleString('en-IN') + '/m');
+  } else {
+    cables.push({ id: 'cable_' + Date.now(), name, used, listPrice, discount, rate });
+    showToast('Cable type added — net rate ₹' + rate.toLocaleString('en-IN') + '/m');
+  }
+  closeModal('modal-cable');
+  renderPricing();
+  populateCableDropdown();
+}
+function deleteCable(i) {
+  if (!confirm('Delete "' + cables[i].name + '"?')) return;
+  cables.splice(i, 1);
+  renderPricing();
+  showToast('Cable type deleted');
+}
+
+function renderMyQuotes() {
+  const mq = quotes.filter(q => q.by === 'Rahul Sharma');
+  const revBanner = document.getElementById('revision-banner');
+  const revQ = mq.filter(q => q.status === 'Revision needed');
+  revBanner.style.display = revQ.length ? 'block' : 'none';
+  revBanner.innerHTML = revQ.map(q => `
+    <div class="notif" style="background:#fff5f5;border-color:#feb2b2;color:#7b1c1c;margin-bottom:10px">
+      <i class="ti ti-alert-triangle" style="color:var(--red)"></i>
+      <div style="flex:1">
+        <strong>${q.id} — ${q.customer}:</strong> Admin requested revision.
+        <em>"${q.history.filter(h=>h.status==='Revision needed').pop()?.note||''}"</em>
+      </div>
+      <button class="btn btn-sm" onclick="loadRevise('${q.id}')"><i class="ti ti-edit"></i>Edit & resubmit</button>
+    </div>`).join('');
+
+  document.getElementById('myq-list').innerHTML = mq.length
+    ? mq.map(q => `
+      <div class="qitem">
+        <div class="qitem-info">
+          <div class="qitem-name">${q.customer} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${q.id}</span></div>
+          <div class="qitem-meta">${q.model.split('–')[0].trim()} · ${q.run}m run · ${q.addr} · ${q.date}</div>
+          <div style="margin-top:7px;display:flex;gap:7px;flex-wrap:wrap">
+            ${q.status==='Approved'?`<button class="btn btn-success btn-sm" onclick="markSent('${q.id}')"><i class="ti ti-send"></i>Send to customer</button>`:''}            ${(q.status==='Approved'||q.status==='Sent')?`<button class="btn btn-sm" style="border-color:#2b6cb0;color:#2b6cb0;background:#ebf4ff" onclick="exportWord('${q.id}')"><i class="ti ti-file-word"></i>Export Word</button>`:''}
+            ${q.status==='Revision needed'?`<button class="btn btn-sm" style="border-color:var(--red);color:var(--red)" onclick="loadRevise('${q.id}')"><i class="ti ti-edit"></i>Edit & resubmit</button>`:''}
+            <button class="btn btn-sm" onclick="showHistory('${q.id}')"><i class="ti ti-clock"></i>History</button>
+          </div>
+        </div>
+        <div class="qitem-right">
+          <div class="qitem-amount">${F(q.total)}</div>
+          ${statusTag(q.status)}
+        </div>
+      </div>`).join('')
+    : '<div class="empty-state"><i class="ti ti-file-text"></i><p>No quotes yet — create your first one</p></div>';
+}
+
+function renderAddonList() {
+  /* Add-ons are now managed in Section C optional items — nothing to render here */
+}
+
+
+/* custom optional items added per quote */
+let customOptionals = [];
+let optIncluded = {};   /* id → true/false for standard optionals */
+let customIncl  = {};   /* index → true/false for custom optionals */
+
+const standardOptionals = [
+  {id:'earth',  name:'Chemical earthing — 17.2mm Cu bonded rod, 50kg EEC, FRP chamber (R<5Ω)', pk:'earth',   unit:'Unit', qty:1},
+  {id:'xvisit', name:'Extra site visit charge (beyond 1st free visit)',                          pk:'xvisit',  unit:'Visit',qty:1},
+  {id:'cu3x16', name:'Cable upgrade: 3Cx16sqmm Cu FRLS (if CU run exceeds 90m)',                pk:'',        unit:'Metre',qty:1, cableKey:'cu3x16'},
+  {id:'cu5x16', name:'Cable upgrade: 5Cx16sqmm Cu (if CU 22kW run exceeds 90m)',               pk:'',        unit:'Metre',qty:1, cableKey:'cu5x16'},
+  {id:'conduit_ext',name:'Additional polyamide conduit run',                    pk:'conduit', unit:'Metre',qty:1},
+];
+
+function getOptRate(opt) {
+  if (opt.cableKey) return getCR(opt.cableKey);
+  if (opt.pk)       return getR(opt.pk);
+  return opt.customRate || 0;
+}
+
+function populateCableDropdown() {
+  const sel = document.getElementById('qcable');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Auto-set by model —</option>' +
+    cables.map(c => `<option value="${c.id}">${c.name} — ₹${getCR(c.id)}/m</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function populateChargerDropdown() {
+  const sel = document.getElementById('qcharger');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select charger model —</option>' +
+    chargerModels.map(m => `<option value="${m.id}">${m.name} (${m.kw}kW · ${m.phase})</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function onChargerSelect() {
+  const mid = document.getElementById('qcharger').value;
+  const m   = chargerModels.find(x => x.id === mid);
+
+  /* reset BoM state so new model's defaults are loaded fresh */
+  bomQty  = {};
+  bomIncl = {};
+
+  if (m) {
+    /* pre-fill bomQty from model component map */
+    m.components.forEach(c => { bomQty[c.pk] = c.qty; });
+    /* set all mapped components included, all unmapped excluded */
+    prices.forEach(p => {
+      bomIncl[p.id] = m.components.some(c => c.pk === p.id);
+    });
+    /* auto-set cable dropdown */
+    const cableSel = document.getElementById('qcable');
+    if (cableSel && m.cableKey) cableSel.value = m.cableKey;
+    /* update info pill */
+    document.getElementById('model-badges').style.display = 'flex';
+    document.getElementById('model-hint').textContent = m.components.length + ' components auto-loaded — adjust qty or toggle items as needed';
+    document.getElementById('pill-kw').textContent = m.kw + ' kW';
+    document.getElementById('pill-phase').textContent = m.phase;
+  } else {
+    document.getElementById('model-badges').style.display = 'none';
+    document.getElementById('model-hint').textContent = 'Select a charger model to auto-populate the BoM';
+  }
+  calcQ();
+}
+
+/* BoM state: qty per component, toggled on/off */
+let bomQty  = {};   /* priceId → qty (user-editable) */
+let bomIncl = {};   /* priceId → bool */
+
+function getBomQty(id)  { return bomQty[id]  !== undefined ? bomQty[id]  : 1; }
+function getBomIncl(id) { return bomIncl[id] !== undefined ? bomIncl[id] : true; }
+
+function calcQ() {
+  const cableId = document.getElementById('qcable')?.value || '';
+  const run     = +document.getElementById('qrun').value || 0;
+
+  /* ─── SECTION A: BoM — all components, fully editable ─── */
+  let secATotal = 0;
+  const breakupRows = prices.map((p, i) => {
+    const qty    = getBomQty(p.id);
+    const incl   = getBomIncl(p.id);
+    const amt    = Math.round(qty * p.rate);
+    if (incl) secATotal += amt;
+    const rowStyle = !incl ? 'opacity:0.42;text-decoration:line-through' : '';
+    return `<tr style="${rowStyle}">
+      <td style="color:var(--text3);font-size:11px">${i+1}</td>
+      <td style="font-weight:500;font-size:12px">${p.name}
+        <span style="font-size:10px;margin-left:4px;background:var(--surface2);color:var(--text3);padding:1px 6px;border-radius:8px">${p.cat}</span>
+      </td>
+      <td style="color:var(--text3);font-size:12px">${p.unit}</td>
+      <td>
+        <input type="number" value="${qty}" min="0"
+          style="width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center;background:var(--surface);color:var(--text)"
+          onchange="bomQty['${p.id}']=Math.max(0,+this.value);calcQ()" ${!incl ? 'disabled' : ''}>
+      </td>
+      <td style="font-size:12px">${F(p.rate)}<span style="font-size:10px;color:var(--text3);margin-left:3px">/${p.unit}</span></td>
+      <td style="font-weight:600;color:${incl ? 'var(--text)' : 'var(--text3)'}">${F(amt)}</td>
+      <td>
+        <label class="sw">
+          <input type="checkbox" ${incl ? 'checked' : ''} onchange="bomIncl['${p.id}']=this.checked;calcQ()">
+          <span class="sw-track"></span>
+        </label>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const totalIncl  = prices.filter(p => getBomIncl(p.id)).length;
+  const totalItems = prices.length;
+
+  document.getElementById('breakup-tbody').innerHTML = breakupRows ||
+    '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:16px">No components in price list — add components in Pricing Manager</td></tr>';
+  document.getElementById('secA-total-badge').textContent = F(secATotal);
+  document.getElementById('secA-foot-total').textContent  = F(secATotal);
+  document.getElementById('secA-item-count').textContent  = `${totalIncl} of ${totalItems} items included`;
+
+  /* ─── SECTION B: extra cable ─── */
+  const xm = run > 0 ? run : 0;
+  const cObj = cables.find(c => c.id === cableId);
+  const cr   = cableId ? getCR(cableId) : 0;
+  const cableName = cObj ? cObj.name : '';
+  const secBTotal = (xm > 0 && cableId) ? Math.round(xm * cr) : 0;
+
+  document.getElementById('extra-metres-badge').textContent = xm > 0 ? xm + 'm' : '—';
+
+  const zeroMsg  = document.getElementById('secB-zero-msg');
+  const tableWrap = document.getElementById('secB-table-wrap');
+  const noCable  = document.getElementById('secB-no-cable');
+
+  if (!cableId) {
+    zeroMsg.style.display   = 'none';
+    tableWrap.style.display = 'none';
+    noCable.style.display   = 'block';
+  } else if (xm === 0) {
+    zeroMsg.style.display   = 'block';
+    tableWrap.style.display = 'none';
+    noCable.style.display   = 'none';
+  } else {
+    zeroMsg.style.display   = 'none';
+    tableWrap.style.display = 'block';
+    noCable.style.display   = 'none';
+    document.getElementById('cable-breakup-tbody').innerHTML = `<tr>
+      <td style="color:var(--text3)">1</td>
+      <td style="font-weight:500">${cableName}<br><span style="font-size:11px;color:var(--text3)">Site measured cable run</span></td>
+      <td style="color:var(--text3)">Metre</td>
+      <td style="font-weight:600;color:#dd6b20">${xm}m</td>
+      <td>${F(cr)}</td>
+      <td style="font-weight:700;color:#dd6b20">${F(secBTotal)}</td>
+    </tr>`;
+  }
+  document.getElementById('secB-total-badge').textContent = F(secBTotal);
+  document.getElementById('secB-foot-total').textContent  = F(secBTotal);
+
+  /* ─── SECTION C: optional items ─── */
+  let secCTotal = 0, optSelected = 0;
+
+  const optRows = standardOptionals.map((o, i) => {
+    const lineQty = +document.getElementById('opt-qty-' + o.id)?.value || o.qty;
+    const rate    = getOptRate(o);
+    const amt     = Math.round(lineQty * rate);
+    if (optIncluded[o.id] === undefined) optIncluded[o.id] = false;
+    const checked = optIncluded[o.id];
+    if (checked) { secCTotal += amt; optSelected++; }
+    return `<tr style="${!checked ? 'opacity:0.55' : ''}">
+      <td style="color:var(--text3)">${i+1}</td>
+      <td style="font-size:12px">${o.name}</td>
+      <td style="color:var(--text3);font-size:12px">${o.unit}</td>
+      <td>
+        <input type="number" id="opt-qty-${o.id}" value="${lineQty}" min="1"
+          style="width:55px;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;text-align:center;background:var(--surface)"
+          onchange="calcQ()">
+      </td>
+      <td style="font-size:12px">${rate > 0 ? F(rate) : '<span style="color:var(--text3);font-size:11px">—</span>'}</td>
+      <td style="font-weight:600;color:#805ad5">${checked ? F(amt) : '—'}</td>
+      <td>
+        <label class="sw">
+          <input type="checkbox" ${checked ? 'checked' : ''} onchange="optIncluded['${o.id}']=this.checked;calcQ()" ${rate===0?'disabled':''}>
+          <span class="sw-track" style="${!checked ? 'background:#cbd5e0' : 'background:#805ad5'}"></span>
+        </label>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const customRows = customOptionals.map((o, i) => {
+    const checked = customIncl[i] !== false;
+    const amt     = Math.round(o.qty * o.rate);
+    if (checked) { secCTotal += amt; optSelected++; }
+    return `<tr style="${!checked ? 'opacity:0.55' : ''}">
+      <td style="color:var(--text3)">${standardOptionals.length + i + 1}</td>
+      <td style="font-weight:500;font-size:12px">${o.name}
+        <span style="font-size:10px;background:#faf5ff;color:#805ad5;padding:1px 6px;border-radius:10px;margin-left:4px">custom</span>
+      </td>
+      <td style="color:var(--text3);font-size:12px">${o.unit}</td>
+      <td style="font-size:12px">${o.qty}</td>
+      <td style="font-size:12px">${F(o.rate)}</td>
+      <td style="font-weight:600;color:#805ad5">${checked ? F(amt) : '—'}</td>
+      <td style="display:flex;align-items:center;gap:6px">
+        <label class="sw" style="margin:0">
+          <input type="checkbox" ${checked ? 'checked' : ''} onchange="customIncl[${i}]=this.checked;calcQ()">
+          <span class="sw-track" style="${!checked ? 'background:#cbd5e0' : 'background:#805ad5'}"></span>
+        </label>
+        <button class="btn btn-sm btn-danger" style="padding:3px 6px;font-size:11px" onclick="removeCustomOptional(${i})"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('optional-tbody').innerHTML = optRows + customRows;
+  document.getElementById('secC-total-badge').textContent = F(secCTotal);
+
+  /* ─── Final summary ─── */
+  const sub = secATotal + secBTotal + secCTotal;
+  const gst = Math.round(sub * 0.18);
+  const tot = sub + gst;
+
+  ['summary-secA','ft-secA'].forEach(id => document.getElementById(id).textContent = F(secATotal));
+  ['summary-secB','ft-secB'].forEach(id => document.getElementById(id).textContent = F(secBTotal));
+  ['summary-secC','ft-secC'].forEach(id => document.getElementById(id).textContent = F(secCTotal));
+  document.getElementById('ft-secB-lbl').textContent = cableId && xm > 0
+    ? `Section B — Cable supply & laying (${xm}m × ₹${cr}/m)`
+    : (cableId ? 'Section B — Cable (0m entered)' : 'Section B — Cable (no cable selected)');
+  document.getElementById('ft-secC-lbl').textContent = `Section C — Optional items (${optSelected} selected)`;
+  document.getElementById('qt-sub').textContent = F(sub);
+  document.getElementById('qt-gst').textContent = F(gst);
+  document.getElementById('qt-tot').textContent = F(tot);
+
+  const d = document.getElementById('qt-tot').dataset;
+  d.v = tot; d.b = secATotal; d.cx = secBTotal; d.ao = secCTotal; d.sub = sub; d.gst = gst;
+}
+
+function openAddOptional() {
+  document.getElementById('opt-name').value = '';
+  document.getElementById('opt-unit').value = 'Unit';
+  document.getElementById('opt-qty').value  = 1;
+  document.getElementById('opt-rate').value = '';
+  document.getElementById('modal-optional').classList.add('open');
+}
+
+function saveOptionalItem() {
+  const name = document.getElementById('opt-name').value.trim();
+  const rate = +document.getElementById('opt-rate').value;
+  if (!name) { showToast('Please enter item description', 'error'); return; }
+  if (!rate) { showToast('Please enter a rate', 'error'); return; }
+  customOptionals.push({
+    name,
+    unit: document.getElementById('opt-unit').value,
+    qty:  +document.getElementById('opt-qty').value || 1,
+    rate
+  });
+  const idx = customOptionals.length - 1;
+  customIncl[idx] = true;
+  closeModal('modal-optional');
+  calcQ();
+  showToast('Optional item added to Section C');
+}
+
+function removeCustomOptional(i) {
+  customOptionals.splice(i, 1);
+  customIncl = {};
+  customOptionals.forEach((_, j) => { customIncl[j] = true; });
+  calcQ();
+}
+
+function submitQ(status) {
+  const chargerId = document.getElementById('qcharger').value;
+  const chargerObj  = chargerModels.find(m => m.id === chargerId);
+  const cableId = document.getElementById('qcable').value || (chargerObj ? chargerObj.cableKey : '');
+  const cObj    = cables.find(c => c.id === cableId);
+  const cust    = document.getElementById('qn').value.trim();
+  if (status === 'Pending review' && !cust) { showToast('Please enter customer name', 'error'); return; }
+  const run  = +document.getElementById('qrun').value || 5;
+  const qty  = 1;
+  const siteDesc = document.getElementById('qsite').value.trim();
+  const d    = document.getElementById('qt-tot').dataset;
+  const id   = 'QT-' + String(quotes.length + 1).padStart(3, '0');
+  const now  = new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short'});
+
+  /* capture selected optional items for record */
+  const selOptionals = standardOptionals
+    .filter(o => optIncluded[o.id])
+    .map(o => ({ name: o.name, qty: +document.getElementById('opt-qty-' + o.id)?.value || o.qty, rate: getOptRate(o) }))
+    .concat(customOptionals.filter((_, i) => customIncl[i] !== false));
+
+  /* capture full BoM snapshot for Word export */
+  const bomSnapshot = prices
+    .filter(p => getBomIncl(p.id) && getBomQty(p.id) > 0)
+    .map(p => ({ name: p.name, cat: p.cat, unit: p.unit, qty: getBomQty(p.id), rate: p.rate, amt: Math.round(getBomQty(p.id) * p.rate) }));
+
+  const cableSnapshot = (cObj && run > 0) ? [{
+    name: cObj.name + ' — site measured run',
+    unit: 'Metre', qty: run, rate: getCR(cObj.id),
+    amt: Math.round(run * getCR(cObj.id))
+  }] : [];
+
+  quotes.unshift({
+    id, customer: cust || '—', addr: document.getElementById('qa').value || '—',
+    phone: document.getElementById('qph').value || '', email: document.getElementById('qem').value || '',
+    siteDesc: document.getElementById('qsite').value.trim(),
+    model: chargerObj ? chargerObj.name : (siteDesc || 'Custom BoM'), run, qty,
+    cableType: cObj ? cObj.name : '',
+    addons: selOptionals.map(o => o.name),
+    bomSnapshot, cableSnapshot, optionalsSnapshot: selOptionals,
+    secA: +d.b, secB: +d.cx, secC: +d.ao,
+    base: +d.b, cableX: +d.cx, aoTotal: +d.ao,
+    sub: +d.sub, gst: +d.gst, total: +d.v,
+    status, by: 'Rahul Sharma', date: now,
+    history: [
+      {status:'Draft', by:'Rahul Sharma', date: now, note:''},
+      ...(status === 'Pending review' ? [{status:'Pending review', by:'Rahul Sharma', date: now, note:'Submitted for admin approval'}] : [])
+    ]
+  });
+
+  /* reset form */
+  ['qn','qa','qph','qem','qsite'].forEach(fid => document.getElementById(fid).value = '');
+  document.getElementById('qcharger').value = '';
+  document.getElementById('qcable').value = '';
+  document.getElementById('qrun').value   = '';
+  bomQty = {}; bomIncl = {};
+  optIncluded = {}; customOptionals = []; customIncl = {};
+  calcQ();
+  updateBadges(); renderDashboard(); renderAllQ(); renderMyQuotes();
+  showToast(status === 'Pending review' ? `${id} submitted for approval` : `Draft ${id} saved`);
+  nav('myq');
+}
+
+function openApproveModal(id) {
+  activeQId = id;
+  const q = quotes.find(x => x.id === id);
+  document.getElementById('modal-approve-preview').innerHTML = `
+    <div class="preview-card">
+      <div class="row"><label>Quote</label><span>${q.id}</span></div>
+      <div class="row"><label>Customer</label><span>${q.customer}</span></div>
+      <div class="row"><label>Model</label><span>${q.model.split('–')[0].trim()}</span></div>
+      <div class="row"><label>Grand total</label><span style="color:var(--blue)">${F(q.total)}</span></div>
+      <div class="row"><label>Submitted by</label><span>${q.by}</span></div>
+    </div>`;
+  document.getElementById('approve-note').value = '';
+  document.getElementById('modal-approve').classList.add('open');
+}
+
+function openRejectModal(id) {
+  activeQId = id;
+  const q = quotes.find(x => x.id === id);
+  document.getElementById('modal-reject-preview').innerHTML = `
+    <div class="preview-card">
+      <div class="row"><label>Quote</label><span>${q.id}</span></div>
+      <div class="row"><label>Customer</label><span>${q.customer} · ${q.addr}</span></div>
+      <div class="row"><label>Amount</label><span style="color:var(--blue)">${F(q.total)}</span></div>
+    </div>`;
+  document.getElementById('reject-reason').value = '';
+  document.getElementById('modal-reject').classList.add('open');
+}
+
+function confirmApprove() {
+  const q = quotes.find(x => x.id === activeQId);
+  if (!q) return;
+  const note = document.getElementById('approve-note').value.trim() || 'Approved — proceed to send to customer';
+  q.status = 'Approved';
+  q.history.push({status:'Approved', by:'Super Admin', date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note});
+  closeModal('modal-approve');
+  updateBadges(); renderDashboard(); renderApprovals(); renderAllQ(); renderMyQuotes();
+  showToast(`${activeQId} approved — sales team notified`);
+}
+
+function confirmReject() {
+  const reason = document.getElementById('reject-reason').value.trim();
+  if (!reason) { showToast('Please enter revision instructions', 'error'); return; }
+  const q = quotes.find(x => x.id === activeQId);
+  if (!q) return;
+  q.status = 'Revision needed';
+  q.history.push({status:'Revision needed', by:'Super Admin', date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note: reason});
+  closeModal('modal-reject');
+  updateBadges(); renderDashboard(); renderApprovals(); renderAllQ(); renderMyQuotes();
+  showToast(`Revision requested for ${activeQId}`);
+}
+
+function markSent(id) {
+  const q = quotes.find(x => x.id === id);
+  if (!q) return;
+  q.status = 'Sent';
+  q.history.push({status:'Sent', by:'Rahul Sharma', date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note:'Final quote sent to customer.'});
+  updateBadges(); renderMyQuotes(); renderAllQ(); renderDashboard();
+  showToast(`${id} marked as sent to customer`);
+}
+
+function loadRevise(id) {
+  const q = quotes.find(x => x.id === id);
+  if (!q) return;
+  document.getElementById('qn').value  = q.customer;
+  document.getElementById('qa').value  = q.addr;
+  document.getElementById('qrun').value = q.run;
+  document.getElementById('qqty').value = q.qty;
+  const sel = document.getElementById('qmodel');
+  const m = models.find(x => x.name === q.model);
+  if (m) sel.value = m.id;
+  calcQ();
+  nav('newq');
+  showToast('Edit the quote details and resubmit for approval');
+}
+
+function showHistory(id) {
+  const q = quotes.find(x => x.id === id);
+  if (!q) return;
+  const dotStyle = {
+    'Draft':            'border-color:#718096;color:#718096',
+    'Pending review':   'border-color:#ed8936;color:#ed8936;background:#fffbeb',
+    'Revision needed':  'border-color:#805ad5;color:#805ad5;background:#faf5ff',
+    'Approved':         'border-color:#38a169;color:#38a169;background:#f0fff4',
+    'Sent':             'border-color:#3182ce;color:#3182ce;background:#ebf4ff',
+  };
+  const icons = {'Draft':'ti-file','Pending review':'ti-clock','Revision needed':'ti-refresh','Approved':'ti-check','Sent':'ti-send'};
+  document.getElementById('modal-history-body').innerHTML = `
+    <div style="margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
+      <div style="font-weight:700;font-size:15px">${q.id} — ${q.customer}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px">${q.model} · ${F(q.total)}</div>
+    </div>
+    <div class="timeline">
+      ${q.history.map(h => `
+        <div class="t-item">
+          <div class="t-dot" style="${dotStyle[h.status]||''}"><i class="ti ${icons[h.status]||'ti-file'}" style="font-size:13px"></i></div>
+          <div class="t-body">
+            <div class="t-title">${h.status}</div>
+            <div class="t-meta">${h.by} · ${h.date}</div>
+            ${h.note ? `<div class="t-note">"${h.note}"</div>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('modal-history').classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.className = `toast toast-${type} show`;
+  t.innerHTML = `<i class="ti ${type==='error'?'ti-alert-circle':'ti-check'}"></i> ${msg}`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+
+/* ── Charger model CRUD ── */
+function renderChargerModels() {
+  const list = document.getElementById('charger-model-list');
+  if (!list) return;
+  if (!chargerModels.length) {
+    list.innerHTML = '<div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">No charger models defined — click Add model</div>';
+    return;
+  }
+  list.innerHTML = chargerModels.map((m, i) => {
+    const compSummary = m.components.map(c => {
+      const p = prices.find(x => x.id === c.pk);
+      return p ? `${p.name} ×${c.qty}` : '';
+    }).filter(Boolean).join(' · ');
+    const cable = cables.find(c => c.id === m.cableKey);
+    return `<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;${i===chargerModels.length-1?'border-bottom:none':''}">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px">
+          ${m.name}
+          <span style="font-size:11px;font-weight:400;background:var(--blue-bg);color:var(--blue-text);padding:2px 7px;border-radius:10px;margin-left:6px">${m.kw}kW · ${m.phase}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">
+          <i class="ti ti-plug" style="font-size:12px;margin-right:4px"></i>Cable: ${cable ? cable.name + ' — ₹' + getCR(cable.id) + '/m' : '—'}
+        </div>
+        <div style="font-size:11px;color:var(--text2)">
+          <i class="ti ti-list-check" style="font-size:12px;margin-right:4px"></i>${m.components.length} components: <span style="color:var(--text3)">${compSummary || 'none'}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-sm" onclick="editChargerModel('${m.id}')"><i class="ti ti-edit"></i>Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteChargerModel('${m.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function populateChargerCompList(existingComps) {
+  /* existingComps: [{pk, qty}] or null for new */
+  const container = document.getElementById('charger-comp-list');
+  container.innerHTML = prices.map((p, i) => {
+    const existing = existingComps ? existingComps.find(c => c.pk === p.id) : null;
+    const checked  = !!existing;
+    const qty      = existing ? existing.qty : 1;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);background:${i%2===0?'var(--surface)':'var(--surface2)'}">
+      <label class="sw" style="flex-shrink:0">
+        <input type="checkbox" id="cmap-chk-${p.id}" ${checked?'checked':''} onchange="document.getElementById('cmap-qty-${p.id}').disabled=!this.checked">
+        <span class="sw-track"></span>
+      </label>
+      <div style="flex:1;font-size:12px;font-weight:${checked?'600':'400'};color:${checked?'var(--text)':'var(--text3)'}">
+        ${p.name}
+        <span style="font-size:10px;background:var(--surface2);color:var(--text3);padding:1px 5px;border-radius:6px;margin-left:4px">${p.cat}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);min-width:60px">${p.unit}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <label style="font-size:11px;color:var(--text3)">Qty</label>
+        <input type="number" id="cmap-qty-${p.id}" value="${qty}" min="0" ${!checked?'disabled':''} 
+          style="width:55px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center;background:var(--surface);color:var(--text)">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function populateChargerCableSelect(selectedKey) {
+  const sel = document.getElementById('charger-cable');
+  sel.innerHTML = '<option value="">— None —</option>' +
+    cables.map(c => `<option value="${c.id}" ${c.id===selectedKey?'selected':''}>${c.name}</option>`).join('');
+}
+
+function openAddCharger() {
+  document.getElementById('charger-modal-title').innerHTML = '<i class="ti ti-bolt"></i>Add charger model';
+  document.getElementById('charger-edit-id').value = '';
+  document.getElementById('charger-name').value    = '';
+  document.getElementById('charger-kw').value      = '';
+  document.getElementById('charger-phase').value   = '3-Ph';
+  populateChargerCableSelect('');
+  populateChargerCompList(null);
+  document.getElementById('modal-charger').classList.add('open');
+}
+
+function editChargerModel(id) {
+  const m = chargerModels.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('charger-modal-title').innerHTML = '<i class="ti ti-edit"></i>Edit charger model';
+  document.getElementById('charger-edit-id').value = id;
+  document.getElementById('charger-name').value    = m.name;
+  document.getElementById('charger-kw').value      = m.kw;
+  document.getElementById('charger-phase').value   = m.phase;
+  populateChargerCableSelect(m.cableKey || '');
+  populateChargerCompList(m.components);
+  document.getElementById('modal-charger').classList.add('open');
+}
+
+function saveChargerModel() {
+  const name  = document.getElementById('charger-name').value.trim();
+  const kw    = +document.getElementById('charger-kw').value || 0;
+  const phase = document.getElementById('charger-phase').value;
+  const cableKey = document.getElementById('charger-cable').value;
+  if (!name) { showToast('Please enter a model name', 'error'); return; }
+
+  /* collect checked components with qty */
+  const components = prices
+    .filter(p => document.getElementById('cmap-chk-' + p.id)?.checked)
+    .map(p => ({ pk: p.id, qty: +document.getElementById('cmap-qty-' + p.id)?.value || 1 }));
+
+  const editId = document.getElementById('charger-edit-id').value;
+  if (editId) {
+    const idx = chargerModels.findIndex(x => x.id === editId);
+    if (idx >= 0) chargerModels[idx] = { id: editId, name, kw, phase, cableKey, components };
+    showToast(`"${name}" updated`);
+  } else {
+    chargerModels.push({ id: 'cm_' + Date.now(), name, kw, phase, cableKey, components });
+    showToast(`"${name}" added`);
+  }
+  closeModal('modal-charger');
+  renderChargerModels();
+  populateChargerDropdown();
+}
+
+function deleteChargerModel(id) {
+  const m = chargerModels.find(x => x.id === id);
+  if (!confirm('Delete "' + (m?.name||id) + '"?')) return;
+  chargerModels = chargerModels.filter(x => x.id !== id);
+  renderChargerModels();
+  populateChargerDropdown();
+  showToast('Charger model deleted');
+}
+
+
+/* ═══════════════════════════════════════════════════
+   EXPORT APPROVED QUOTATION TO WORD (.docx)
+   Uses HTML-in-docx method — no library needed.
+   Word opens HTML wrapped in docx mime envelope.
+═══════════════════════════════════════════════════ */
+function exportWord(id) {
+  const q = quotes.find(x => x.id === id);
+  if (!q) return;
+
+  /* If server is running, generate proper .docx via Node.js */
+  const wordEndpoint = VERCEL_URL ? VERCEL_URL.replace(/\/$/,'') + '/api/export-word' : null;
+  if (wordEndpoint) {
+    setDbStatus('syncing', 'Generating Word doc…');
+    fetch(wordEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(q),
+      signal: AbortSignal.timeout(15000)
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.blob();
+    })
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = `Quotation_${q.id}_${q.customer.replace(/\s+/g,'_')}.docx`;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setDbStatus('online', 'Connected — EV_Database.json');
+      showToast(`Quotation ${q.id} exported as Word (.docx)`);
+    })
+    .catch(e => {
+      setDbStatus('offline', 'Export failed: ' + e.message);
+      exportWordFallback(q);
+    });
+  } else {
+    /* Fallback: HTML-in-Word blob when server is offline */
+    exportWordFallback(q);
+  }
+}
+
+function exportWordFallback(q) {
+  /* HTML-in-Word fallback for offline mode — opens in Word as .doc */
+  const F2 = v => '\u20B9' + Math.round(v).toLocaleString('en-IN');
+  const today = new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'long', year:'numeric'});
+  const approvalEntry = (q.history||[]).filter(h=>h.status==='Approved').pop();
+  const approvedBy   = approvalEntry ? approvalEntry.by   : '—';
+  const approvedDate = approvalEntry ? approvalEntry.date : '—';
+  const approvedNote = approvalEntry ? approvalEntry.note : '';
+
+  const secARows = (q.bomSnapshot||[]).map((item,i) => `
+    <tr style="background:${i%2===0?'#F7FAFC':'#fff'}">
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;color:#718096;font-size:9pt">${i+1}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;font-size:9.5pt">${item.name}<br><span style="font-size:8pt;color:#718096">${item.cat}</span></td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-size:9pt">${item.unit}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-size:9pt">${item.qty}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-size:9pt">${F2(item.rate)}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-size:9pt">18%</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-weight:bold;font-size:9pt">${F2(item.amt)}</td>
+    </tr>`).join('');
+
+  const startB = (q.bomSnapshot||[]).length;
+  const secBRows = (q.cableSnapshot||[]).map((item,i) => `
+    <tr style="background:${(startB+i)%2===0?'#F7FAFC':'#fff'}">
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;color:#718096;font-size:9pt">${startB+i+1}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;font-size:9.5pt">${item.name}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-size:9pt">Metre</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-weight:bold;color:#C05621;font-size:9pt">${item.qty}m</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-size:9pt">${F2(item.rate)}/m</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-size:9pt">18%</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-weight:bold;color:#C05621;font-size:9pt">${F2(item.amt)}</td>
+    </tr>`).join('');
+
+  const startC = startB + (q.cableSnapshot||[]).length;
+  const secCRows = (q.optionalsSnapshot||[]).map((item,i) => `
+    <tr style="background:${(startC+i)%2===0?'#F7FAFC':'#fff'}">
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;color:#718096;font-size:9pt">${startC+i+1}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;font-size:9.5pt">${item.name}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-size:9pt">${item.unit||'Unit'}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-size:9pt">${item.qty||1}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-size:9pt">${F2(item.rate||0)}</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:center;font-size:9pt">18%</td>
+      <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-weight:bold;font-size:9pt">${F2((item.qty||1)*(item.rate||0))}</td>
+    </tr>`).join('');
+
+  const historyRows = (q.history||[]).map(h=>`
+    <tr><td style="border:1px solid #E2E8F0;padding:4pt 7pt;font-size:8.5pt">${h.date}</td>
+    <td style="border:1px solid #E2E8F0;padding:4pt 7pt;font-size:8.5pt;font-weight:bold">${h.status}</td>
+    <td style="border:1px solid #E2E8F0;padding:4pt 7pt;font-size:8.5pt">${h.by}</td>
+    <td style="border:1px solid #E2E8F0;padding:4pt 7pt;font-size:8.5pt;font-style:italic;color:#4A5568">${h.note||'—'}</td></tr>`).join('');
+
+  const docHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><style>@page{size:A4;margin:2cm}body{font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1A202C}table{border-collapse:collapse;width:100%}.gt td{font-weight:bold;font-size:12pt;background:#1A3A5C;color:#fff}</style></head><body>
+<table style="width:100%;border:none;border-bottom:3px solid #2E6DB4;margin-bottom:10pt"><tr>
+<td style="border:none;padding:8pt 0"><b style="font-size:16pt;color:#1A3A5C">EV CHARGER INSTALLATION SERVICES</b><br><span style="font-size:9pt;color:#4A5568;font-style:italic">Professional EV Charging Solutions</span></td>
+<td style="border:none;text-align:right;padding:8pt 0"><b style="font-size:22pt;color:#2E6DB4">QUOTATION</b></td></tr></table>
+<table style="width:100%;border:none;margin-bottom:8pt"><tr>
+<td style="border:none;font-size:9pt;color:#4A5568">Ref: ${q.id}</td>
+<td style="border:none;text-align:right;font-size:9pt;color:#4A5568">Date: ${q.date||today}</td></tr></table>
+<p style="margin:4pt 0">To,</p><p style="font-weight:bold;font-size:11pt;margin:2pt 0">${q.customer}</p>
+${q.addr&&q.addr!=='—'?`<p style="margin:1pt 0;font-size:9pt">${q.addr}</p>`:''}
+${q.phone?`<p style="margin:1pt 0;font-size:9pt">${q.phone}</p>`:''}
+${q.email?`<p style="margin:1pt 0;font-size:9pt;color:#2E6DB4">${q.email}</p>`:''}
+<p style="margin:10pt 0 4pt;font-size:10pt"><b>Subject: </b><u>Quotation for EV Charger Installation — ${q.model}${q.siteDesc?' at '+q.siteDesc:''}</u></p>
+<hr style="border:none;border-top:1px solid #2E6DB4;margin:6pt 0">
+<p style="margin:6pt 0;font-size:9.5pt">This is with reference to your requirement of EV charger installation. We thank you for providing us an opportunity to associate with your esteemed organization. Please find below our commercial offer for your acceptance.</p>
+<p style="margin:4pt 0 12pt;font-size:9.5pt">We hope this offer is in line with your expectations. In case of any query, please feel free to contact us.</p>
+<p style="font-weight:bold;font-size:11pt;color:#1A3A5C;text-decoration:underline;margin:0 0 6pt">Commercials</p>
+<table style="width:100%;border-collapse:collapse">
+<thead><tr style="background:#1A3A5C">
+<th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:5%">S.No</th>
+<th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:left;font-size:9pt;width:42%">ITEMS</th>
+<th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:9%">Unit</th>
+<th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:8%">Qty</th>
+<th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:16%">Price/Unit</th>
+<th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:8%">Tax</th>
+<th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:12%">Amount</th>
+</tr></thead>
+<tbody>${secARows}${secBRows}${secCRows}
+<tr style="background:#EBF4FF"><td colspan="6" style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:right;font-weight:bold;color:#1A3A5C;font-size:9pt">Sub Total (excl. GST)</td><td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:right;font-weight:bold;color:#1A3A5C;font-size:9pt">${F2(q.sub)}</td></tr>
+<tr><td colspan="6" style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-size:9pt;color:#4A5568">GST @ 18%</td><td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-size:9pt;color:#4A5568">${F2(q.gst)}</td></tr>
+<tr class="gt"><td colspan="6" style="border:2px solid #1A3A5C;padding:6pt 7pt;text-align:right">GRAND TOTAL (incl. GST)</td><td style="border:2px solid #1A3A5C;padding:6pt 7pt;text-align:right;font-size:12pt">${F2(q.total)}</td></tr>
+</tbody></table>
+<div style="background:#F0FFF4;border:1px solid #9AE6B4;padding:8pt 10pt;margin:12pt 0;font-size:9pt"><b style="color:#276749">✓ APPROVED QUOTATION</b> — Approved by: <b>${approvedBy}</b> on <b>${approvedDate}</b>${approvedNote?' — "'+approvedNote+'"':''}</div>
+<p style="font-weight:bold;font-size:12pt;color:#1A3A5C;text-decoration:underline;margin:14pt 0 4pt">Terms and Conditions</p>
+<p style="font-size:9pt;margin:3pt 0"><b>Warranty:</b> 12 months on installation workmanship from date of commissioning.</p>
+<p style="font-size:9pt;margin:3pt 0"><b>Lead Time:</b> Work commences within 5–7 working days of advance payment receipt and site readiness.</p>
+<p style="font-size:9pt;margin:3pt 0"><b>Scope of I&amp;C – Inclusion:</b> Cable termination, commissioning, CMS onboarding (if applicable).</p>
+<p style="font-size:9pt;margin:3pt 0"><b>Scope of I&amp;C – Exclusions:</b> Civil work, DISCOM charges, switchgear, transformer, earthing (unless quoted), canopy, charger stand, and input cable beyond quoted run.</p>
+<p style="font-weight:bold;font-size:10pt;color:#1A3A5C;text-decoration:underline;margin:10pt 0 4pt">Terms of Payment</p>
+<p style="font-size:9pt;margin:2pt 0">100% advance on order confirmation before commencement of work.</p>
+<p style="font-weight:bold;font-size:10pt;color:#1A3A5C;text-decoration:underline;margin:10pt 0 4pt">Validity</p>
+<p style="font-size:9pt;margin:2pt 0">This offer is valid for 30 days from the date of issue.</p>
+<p style="font-weight:bold;font-size:10pt;color:#1A3A5C;text-decoration:underline;margin:10pt 0 4pt">Approval Trail</p>
+<table style="width:100%"><thead><tr style="background:#276749"><th style="border:1px solid #9AE6B4;padding:4pt 7pt;color:#fff;font-size:8.5pt;width:15%">Date</th><th style="border:1px solid #9AE6B4;padding:4pt 7pt;color:#fff;font-size:8.5pt;width:22%">Status</th><th style="border:1px solid #9AE6B4;padding:4pt 7pt;color:#fff;font-size:8.5pt;width:22%">By</th><th style="border:1px solid #9AE6B4;padding:4pt 7pt;color:#fff;font-size:8.5pt">Note</th></tr></thead><tbody>${historyRows}</tbody></table>
+<table style="width:100%;border:none;margin-top:24pt"><tr>
+<td style="border:none;width:45%;vertical-align:bottom"><p style="font-size:9pt;color:#718096">Customer acceptance</p><p style="border-top:1px solid #CBD5E0;padding-top:20pt;font-size:8.5pt;color:#A0AEC0">Signature &amp; date</p></td>
+<td style="border:none;width:10%"></td>
+<td style="border:none;width:45%;text-align:right;vertical-align:bottom"><p style="font-size:9pt;color:#718096">For EV Charger Installation Services</p><p style="font-weight:bold;font-size:10pt">${q.by}</p><p style="border-top:1px solid #CBD5E0;padding-top:20pt;font-size:8.5pt;color:#A0AEC0;margin-top:20pt">Authorised Signatory</p></td>
+</tr></table>
+<div style="border-top:1px solid #2E6DB4;margin-top:16pt;padding-top:6pt;text-align:center;font-size:8pt;color:#718096">Quote ${q.id} | Generated ${today} | This is a computer-generated document.</div>
+</body></html>`;
+
+  const blob = new Blob(['\ufeff', docHTML], { type: 'application/msword' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `Quotation_${q.id}_${q.customer.replace(/\s+/g,'_')}.doc`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Quotation ${q.id} exported (offline fallback .doc)`);
+}
+
+
+
+/* ── DB Config ──────────────────────────────────────────── */
+function openSetup() {
+  document.getElementById('cfg-sb-url').value = SUPABASE_URL;
+  document.getElementById('cfg-sb-key').value = SUPABASE_KEY;
+  document.getElementById('cfg-vk-url').value = VERCEL_URL;
+  document.getElementById('modal-setup').classList.add('open');
+}
+async function testConnection() {
+  const url = document.getElementById('cfg-sb-url').value.trim();
+  const key = document.getElementById('cfg-sb-key').value.trim();
+  if (!url || !key) { showToast('Please fill in URL and key', 'error'); return; }
+  showToast('Testing connection…');
+  try {
+    const res = await fetch(url + '/rest/v1/pricing?select=id&limit=1', {
+      headers: { 'apikey': key, 'Authorization': 'Bearer ' + key },
+      signal: AbortSignal.timeout(5000)
+    });
+    if (res.ok) showToast('Connection successful ✓');
+    else showToast('Connection failed: HTTP ' + res.status, 'error');
+  } catch(e) { showToast('Connection failed: ' + e.message, 'error'); }
+}
+function saveConfig() {
+  const url = document.getElementById('cfg-sb-url').value.trim();
+  const key = document.getElementById('cfg-sb-key').value.trim();
+  const vku = document.getElementById('cfg-vk-url').value.trim();
+  if (!url || !key) { showToast('Supabase URL and key are required', 'error'); return; }
+  SUPABASE_URL = url; SUPABASE_KEY = key; VERCEL_URL = vku;
+  localStorage.setItem('sb_url', url);
+  localStorage.setItem('sb_key', key);
+  localStorage.setItem('vk_url', vku);
+  closeModal('modal-setup');
+  document.getElementById('setup-btn').style.display = 'none';
+  showToast('Config saved — connecting…');
+  loadFromServer().finally(() => {
+    populateCableDropdown(); populateChargerDropdown();
+    updateBadges(); renderDashboard();
+  });
+}
+
+function savePricing() { populateCableDropdown(); populateChargerDropdown(); renderChargerModels(); showToast('Prices saved — active on all new quotes'); }
+function resetPrices() { prices = JSON.parse(JSON.stringify(defaultPrices)); cables = JSON.parse(JSON.stringify(defaultCables)); renderPricing(); showToast('Prices reset to defaults'); }
+
+const navMeta = {
+  dashboard: {title:'Dashboard',         sub:'Quote pipeline & approval overview',              lbl:'New quote',  id:'n-dashboard'},
+  approvals: {title:'Pending approvals', sub:'Review and approve submitted quotes',             lbl:'',           id:'n-approvals'},
+  allq:      {title:'All quotes',        sub:'Full quote register across all team members',     lbl:'',           id:'n-allq'},
+  pricing:   {title:'Pricing manager',   sub:'Set component rates used in all quote calculations', lbl:'Save',   id:'n-pricing'},
+  chargers:  {title:'Charger models',    sub:'Define models and map components to auto-populate BoM', lbl:'Add model', id:'n-chargers'},
+  team:      {title:'Team',              sub:'Manage team members and their roles',              lbl:'Invite',    id:'n-team'},
+  newq:      {title:'New quote',         sub:'Build and submit a quote for admin approval',      lbl:'Submit',    id:'n-newq'},
+  myq:       {title:'My quotes',         sub:'Track your submissions, approvals and revisions', lbl:'New quote', id:'n-myq'},
+};
+
+function nav(id) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  const m = navMeta[id] || {};
+  document.getElementById('ptitle').textContent = m.title || id;
+  document.getElementById('psub').textContent   = m.sub || '';
+  document.getElementById('top-lbl').textContent = m.lbl || 'New quote';
+  document.getElementById('top-btn').style.display = m.lbl ? 'inline-flex' : 'none';
+  if (m.id) document.getElementById(m.id)?.classList.add('active');
+  if (id === 'pricing')  renderPricing();
+  if (id === 'chargers') { renderChargerModels(); populateChargerCableSelect(''); }
+  if (id === 'allq')    renderAllQ();
+  if (id === 'approvals') renderApprovals();
+  if (id === 'myq')     renderMyQuotes();
+  if (id === 'dashboard') renderDashboard();
+}
+
+function topAct() {
+  const cur = document.querySelector('.sec.active')?.id.replace('sec-','');
+  if (cur === 'pricing')  savePricing();
+  else if (cur === 'chargers') openAddCharger();
+  else nav('newq');
+}
+
+function toggleRole() {
+  role = role === 'admin' ? 'team' : 'admin';
+  document.getElementById('anav').style.display = role === 'admin' ? 'block' : 'none';
+  document.getElementById('tnav').style.display = role === 'team'  ? 'block' : 'none';
+  /* Pricing manager & charger models admin-only */
+  ['n-pricing','n-chargers'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = role === 'admin' ? 'flex' : 'none';
+  });
+  const pill = document.getElementById('rpill');
+  if (role === 'admin') {
+    pill.style.background = 'rgba(214,158,46,0.18)';
+    pill.style.borderColor = 'rgba(214,158,46,0.3)';
+    pill.style.color = '#f6e05e';
+    pill.innerHTML = '<i class="ti ti-crown"></i><span id="rlabel">Super Admin</span><i class="ti ti-chevron-right" style="margin-left:auto"></i>';
+  } else {
+    pill.style.background = 'rgba(49,130,206,0.18)';
+    pill.style.borderColor = 'rgba(49,130,206,0.3)';
+    pill.style.color = '#90cdf4';
+    pill.innerHTML = '<i class="ti ti-user"></i><span id="rlabel">Sales team (Rahul)</span><i class="ti ti-chevron-right" style="margin-left:auto"></i>';
+  }
+  nav(role === 'admin' ? 'dashboard' : 'myq');
+}
+
+// Click outside to close modals
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); }));
+
+
+/* ═══════════════════════════════════════════════════
+   DATABASE SYNC — Supabase REST API
+   Falls back to localStorage when offline
+═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   CLOUD DATABASE — Supabase REST API
+   Config is stored in localStorage after first setup
+═══════════════════════════════════════════════════ */
+
+let SUPABASE_URL = localStorage.getItem('sb_url') || '';
+let SUPABASE_KEY = localStorage.getItem('sb_key') || '';
+let VERCEL_URL   = localStorage.getItem('vk_url') || '';   // e.g. https://your-app.vercel.app
+
+let dbOnline = false;
+let lastSync = null;
+let autoSaveTimer = null;
+
+function setDbStatus(state, msg) {
+  const dot = document.getElementById('db-dot');
+  const lbl = document.getElementById('db-status');
+  if (dot) dot.className = 'db-dot ' + state;
+  if (lbl) lbl.textContent = msg;
+  dbOnline = (state === 'online');
+}
+function setDbTime(t) {
+  const el = document.getElementById('db-time');
+  if (el) el.textContent = t ? 'Last sync: ' + t : '';
+}
+
+/* ── Supabase helpers ─────────────────────────────────────── */
+function sbFetch(path, opts = {}) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return Promise.reject(new Error('Not configured'));
+  return fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=representation',
+      ...(opts.headers || {})
+    }
+  });
+}
+
+async function sbGet(table) {
+  const res = await sbFetch(table + '?select=*', { signal: AbortSignal.timeout(6000) });
+  if (!res.ok) throw new Error(table + ' GET ' + res.status);
+  return res.json();
+}
+
+async function sbUpsert(table, rows) {
+  if (!rows || !rows.length) return;
+  const res = await sbFetch(table, {
+    method: 'POST',
+    prefer: 'resolution=merge-duplicates,return=minimal',
+    body: JSON.stringify(rows)
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(table + ' upsert: ' + t); }
+}
+
+async function sbDelete(table, idList) {
+  if (!idList || !idList.length) return;
+  const ids = idList.map(id => `"${id}"`).join(',');
+  const res = await sbFetch(`${table}?id=in.(${ids})`, { method: 'DELETE', prefer: 'return=minimal' });
+  if (!res.ok) throw new Error(table + ' delete ' + res.status);
+}
+
+/* ── Map app state → Supabase rows ───────────────────────── */
+function pricingRows()  { return prices.map(p => ({ id:p.id, name:p.name, cat:p.cat, unit:p.unit, rate:p.rate })); }
+function cableRows()    { return cables.map(c => ({ id:c.id, name:c.name, used_in:c.used, list_price:c.listPrice||c.rate, discount:c.discount||0, rate:getCR(c.id) })); }
+function chargerRows()  { return chargerModels.map(m => ({ id:m.id, name:m.name, kw:m.kw, phase:m.phase, cable_key:m.cableKey||'', components:m.components||[] })); }
+function quoteRow(q)    {
+  return {
+    id: q.id, customer: q.customer, addr: q.addr, phone: q.phone||'', email: q.email||'',
+    site_desc: q.siteDesc||q.site_desc||'', model: q.model, cable_type: q.cableType||q.cable_type||'',
+    run: q.run||0, qty: q.qty||1,
+    sec_a: q.secA||q.base||0, sec_b: q.secB||q.cableX||0, sec_c: q.secC||q.aoTotal||0,
+    sub_total: q.sub||0, gst: q.gst||0, total: q.total||0,
+    status: q.status, prepared_by: q.by||q.prepared_by||'',
+    quote_date: q.date||q.quote_date||'',
+    bom_snapshot: q.bomSnapshot||[], cable_snapshot: q.cableSnapshot||[],
+    optionals_snapshot: q.optionalsSnapshot||[], addons: q.addons||[], history: q.history||[]
+  };
+}
+
+/* ── Map Supabase rows → app state ───────────────────────── */
+function rowToQuote(r) {
+  return { id:r.id, customer:r.customer, addr:r.addr, phone:r.phone||'', email:r.email||'',
+    siteDesc:r.site_desc||'', model:r.model, cableType:r.cable_type||'',
+    run:r.run||0, qty:r.qty||1,
+    secA:r.sec_a||0, secB:r.sec_b||0, secC:r.sec_c||0,
+    base:r.sec_a||0, cableX:r.sec_b||0, aoTotal:r.sec_c||0,
+    sub:r.sub_total||0, gst:r.gst||0, total:r.total||0,
+    status:r.status, by:r.prepared_by||'', date:r.quote_date||'',
+    bomSnapshot:r.bom_snapshot||[], cableSnapshot:r.cable_snapshot||[],
+    optionalsSnapshot:r.optionals_snapshot||[], addons:r.addons||[], history:r.history||[]
+  };
+}
+function rowToCable(r) {
+  return { id:r.id, name:r.name, used:r.used_in||'', listPrice:r.list_price||r.rate, discount:r.discount||0, rate:r.rate||0 };
+}
+function rowToModel(r) {
+  return { id:r.id, name:r.name, kw:r.kw, phase:r.phase, cableKey:r.cable_key||'', components:r.components||[] };
+}
+
+/* ── localStorage fallback ───────────────────────────────── */
+function saveLocal() {
+  try { localStorage.setItem('ev_db', JSON.stringify({quotes,prices,cables,chargerModels})); } catch(e){}
+}
+function loadLocal() {
+  try {
+    const d = localStorage.getItem('ev_db');
+    if (d) {
+      const p = JSON.parse(d);
+      if (p.quotes)        quotes        = p.quotes;
+      if (p.prices?.length)  prices      = p.prices;
+      if (p.cables?.length)  cables      = p.cables;
+      if (p.chargerModels?.length) chargerModels = p.chargerModels;
+      return true;
+    }
+  } catch(e){}
+  return false;
+}
+
+/* ── Load from Supabase ───────────────────────────────────── */
+async function loadFromServer() {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    setDbStatus('offline', 'Not configured — click Setup');
+    loadLocal();
+    return;
+  }
+  setDbStatus('syncing', 'Connecting…');
+  try {
+    const [qRows, pRows, cRows, mRows] = await Promise.all([
+      sbGet('quotes'), sbGet('pricing'), sbGet('cable_rates'), sbGet('charger_models')
+    ]);
+    quotes = qRows.map(rowToQuote).sort((a,b) => (b.id||'').localeCompare(a.id||''));
+    if (pRows.length)  prices        = pRows;
+    if (cRows.length)  cables        = cRows.map(rowToCable);
+    if (mRows.length)  chargerModels = mRows.map(rowToModel);
+    saveLocal();
+    lastSync = new Date().toLocaleTimeString('en-IN');
+    setDbTime(lastSync);
+    setDbStatus('online', 'Supabase — live');
+    refreshAllViews();
+  } catch(e) {
+    setDbStatus('offline', 'Offline — using local cache');
+    loadLocal();
+    refreshAllViews();
+    console.warn('Supabase load failed:', e.message);
+  }
+}
+
+/* ── Save to Supabase ─────────────────────────────────────── */
+async function saveToServer(silent) {
+  saveLocal();
+  if (!dbOnline) return;
+  setDbStatus('syncing', 'Saving…');
+  try {
+    await Promise.all([
+      sbUpsert('pricing', pricingRows()),
+      sbUpsert('cable_rates', cableRows()),
+      sbUpsert('charger_models', chargerRows()),
+    ]);
+    lastSync = new Date().toLocaleTimeString('en-IN');
+    setDbTime(lastSync);
+    setDbStatus('online', 'Supabase — live');
+    if (!silent) showToast('Saved to Supabase');
+  } catch(e) {
+    setDbStatus('offline', 'Save failed — stored locally');
+    if (!silent) showToast('Cloud save failed — data kept locally', 'error');
+  }
+}
+
+/* ── Save a single quote ─────────────────────────────────── */
+async function saveQuoteToCloud(q) {
+  saveLocal();
+  if (!dbOnline) return;
+  try {
+    await sbUpsert('quotes', [quoteRow(q)]);
+  } catch(e) {
+    console.warn('Quote cloud save failed:', e.message);
+  }
+}
+
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => saveToServer(true), 2000);
+}
+
+function refreshAllViews() {
+  populateCableDropdown();
+  populateChargerDropdown();
+  updateBadges();
+  renderDashboard();
+  const cur = document.querySelector('.sec.active')?.id.replace('sec-','');
+  if (cur === 'pricing')   renderPricing();
+  if (cur === 'chargers')  renderChargerModels();
+  if (cur === 'allq')      renderAllQ();
+  if (cur === 'approvals') renderApprovals();
+  if (cur === 'myq')       renderMyQuotes();
+}
+
+/* ── Excel export ─────────────────────────────────────────── */
+function exportExcel() {
+  const wb = XLSX.utils.book_new();
+  const qRows = [['Quote ID','Customer','Address','Phone','Email','Model','Cable Run (m)',
+    'Sec A (₹)','Sec B (₹)','Sec C (₹)','Sub Total','GST','Grand Total','Status','By','Date']];
+  quotes.forEach(q => qRows.push([q.id,q.customer,q.addr,q.phone||'',q.email||'',q.model,q.run,
+    q.secA||q.base,q.secB||q.cableX,q.secC||q.aoTotal,q.sub,q.gst,q.total,q.status,q.by,q.date]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(qRows), 'Quotes');
+  const pRows = [['ID','Name','Category','Unit','Rate (₹)']];
+  prices.forEach(p => pRows.push([p.id,p.name,p.cat,p.unit,p.rate]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pRows), 'Pricing');
+  const cRows = [['ID','Name','Used In','List Price','Discount %','Net Rate']];
+  cables.forEach(c => cRows.push([c.id,c.name,c.used,c.listPrice||c.rate,c.discount||0,getCR(c.id)]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cRows), 'Cable Rates');
+  XLSX.writeFile(wb, 'EV_Quotes_' + new Date().toLocaleDateString('en-IN').replace(/\//g,'-') + '.xlsx');
+  showToast('Excel exported');
+}
+
+
+/* ── Patch all save operations to trigger auto-save ── */
+const _origSubmitQ = submitQ;
+window.submitQ = function(status) {
+  _origSubmitQ(status);
+  /* save the newly created quote to cloud immediately */
+  if (quotes.length > 0) saveQuoteToCloud(quotes[0]);
+  scheduleAutoSave();
+};
+
+const _origConfirmApprove = confirmApprove;
+window.confirmApprove = function() {
+  _origConfirmApprove();
+  const q = quotes.find(x => x.id === activeQId);
+  if (q) saveQuoteToCloud(q);
+};
+
+const _origConfirmReject = confirmReject;
+window.confirmReject = function() {
+  _origConfirmReject();
+  const q = quotes.find(x => x.id === activeQId);
+  if (q) saveQuoteToCloud(q);
+};
+
+const _origMarkSent = markSent;
+window.markSent = function(id) {
+  _origMarkSent(id);
+  const q = quotes.find(x => x.id === id);
+  if (q) saveQuoteToCloud(q);
+};
+
+const _origSavePricing = savePricing;
+window.savePricing = function() { _origSavePricing(); scheduleAutoSave(); };
+
+const _origSaveChargerModel = saveChargerModel;
+window.saveChargerModel = function() { _origSaveChargerModel(); scheduleAutoSave(); };
+
+const _origSaveComp = saveComp;
+window.saveComp = function() { _origSaveComp(); scheduleAutoSave(); };
+
+const _origSaveCable = saveCable;
+window.saveCable = function() { _origSaveCable(); scheduleAutoSave(); };
+
+const _origDeleteComp = deleteComp;
+window.deleteComp = function(i) { _origDeleteComp(i); scheduleAutoSave(); };
+
+const _origDeleteCable = deleteCable;
+window.deleteCable = function(i) { _origDeleteCable(i); scheduleAutoSave(); };
+
+const _origDeleteChargerModel = deleteChargerModel;
+window.deleteChargerModel = function(id) { _origDeleteChargerModel(id); scheduleAutoSave(); };
+
+// Init — load from server, then render regardless of online/offline result
+/* Show/hide setup button based on config */
+if (SUPABASE_URL && SUPABASE_KEY) {
+  const sb = document.getElementById('setup-btn');
+  if (sb) sb.style.display = 'none';
+}
+loadFromServer().finally(() => {
+  populateCableDropdown();
+  populateChargerDropdown();
+  calcQ();
+  updateBadges();
+  renderDashboard();
+});
+</script>
+</body>
+</html>
