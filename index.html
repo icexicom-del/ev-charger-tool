@@ -2046,11 +2046,7 @@ function exportWordFallback(q) {
       <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-weight:bold;font-size:9pt">${F2((item.qty||1)*(item.rate||0))}</td>
     </tr>`).join('');
 
-  const historyRows = (q.history||[]).map(h=>`
-    <tr><td style="border:1px solid #E2E8F0;padding:4pt 7pt;font-size:8.5pt">${h.date}</td>
-    <td style="border:1px solid #E2E8F0;padding:4pt 7pt;font-size:8.5pt;font-weight:bold">${h.status}</td>
-    <td style="border:1px solid #E2E8F0;padding:4pt 7pt;font-size:8.5pt">${h.by}</td>
-    <td style="border:1px solid #E2E8F0;padding:4pt 7pt;font-size:8.5pt;font-style:italic;color:#4A5568">${h.note||'—'}</td></tr>`).join('');
+
 
   const docHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><style>@page{size:A4;margin:2cm}body{font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1A202C}table{border-collapse:collapse;width:100%}.gt td{font-weight:bold;font-size:12pt;background:#1A3A5C;color:#fff}</style></head><body>
 <table style="width:100%;border:none;border-bottom:3px solid #2E6DB4;margin-bottom:10pt"><tr>
@@ -2093,8 +2089,7 @@ ${q.email?`<p style="margin:1pt 0;font-size:9pt;color:#2E6DB4">${q.email}</p>`:'
 <p style="font-size:9pt;margin:2pt 0">100% advance on order confirmation before commencement of work.</p>
 <p style="font-weight:bold;font-size:10pt;color:#1A3A5C;text-decoration:underline;margin:10pt 0 4pt">Validity</p>
 <p style="font-size:9pt;margin:2pt 0">This offer is valid for 30 days from the date of issue.</p>
-<p style="font-weight:bold;font-size:10pt;color:#1A3A5C;text-decoration:underline;margin:10pt 0 4pt">Approval Trail</p>
-<table style="width:100%"><thead><tr style="background:#276749"><th style="border:1px solid #9AE6B4;padding:4pt 7pt;color:#fff;font-size:8.5pt;width:15%">Date</th><th style="border:1px solid #9AE6B4;padding:4pt 7pt;color:#fff;font-size:8.5pt;width:22%">Status</th><th style="border:1px solid #9AE6B4;padding:4pt 7pt;color:#fff;font-size:8.5pt;width:22%">By</th><th style="border:1px solid #9AE6B4;padding:4pt 7pt;color:#fff;font-size:8.5pt">Note</th></tr></thead><tbody>${historyRows}</tbody></table>
+
 <table style="width:100%;border:none;margin-top:24pt"><tr>
 <td style="border:none;width:45%;vertical-align:bottom"><p style="font-size:9pt;color:#718096">Customer acceptance</p><p style="border-top:1px solid #CBD5E0;padding-top:20pt;font-size:8.5pt;color:#A0AEC0">Signature &amp; date</p></td>
 <td style="border:none;width:10%"></td>
