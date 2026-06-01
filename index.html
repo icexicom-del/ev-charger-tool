@@ -1048,7 +1048,7 @@ function updateBadges() {
   const p = pendingQ().length;
   document.getElementById('appr-badge').textContent = p;
   document.getElementById('allq-badge').textContent = quotes.length;
-  document.getElementById('myq-badge').textContent  = quotes.filter(q => q.by === 'Rahul Sharma').length;
+  document.getElementById('myq-badge').textContent  = quotes.filter(q => q.by === (_currentUserName||(currentUser?currentUser.name:''))).length;
   document.getElementById('m-pend').textContent = p;
   document.getElementById('m-appr').textContent = quotes.filter(q => q.status === 'Approved').length;
   document.getElementById('m-sent').textContent = quotes.filter(q => q.status === 'Sent').length;
@@ -1061,7 +1061,7 @@ function updateBadges() {
   document.getElementById('ps-rev').textContent   = statusCounts['Revision needed'];
   document.getElementById('ps-appr').textContent  = statusCounts['Approved'];
   document.getElementById('ps-sent').textContent  = statusCounts['Sent'];
-  document.getElementById('team-rahul-count').textContent = quotes.filter(q => q.by === 'Rahul Sharma').length;
+  
 }
 
 function renderDashboard() {
@@ -1352,7 +1352,7 @@ function deleteCable(i) {
 }
 
 function renderMyQuotes() {
-  const mq = quotes.filter(q => q.by === 'Rahul Sharma');
+  const mq = quotes.filter(q => q.by === (_currentUserName||(currentUser?currentUser.name:'')));
   const revBanner = document.getElementById('revision-banner');
   const revQ = mq.filter(q => q.status === 'Revision needed');
   revBanner.style.display = revQ.length ? 'block' : 'none';
@@ -1373,6 +1373,8 @@ function renderMyQuotes() {
           <div class="qitem-name">${q.customer} <span style="font-size:11px;color:var(--text3);font-weight:400">· ${q.id}</span></div>
           <div class="qitem-meta">${q.model.split('–')[0].trim()} · ${q.run}m run · ${q.addr} · ${q.date}</div>
           <div style="margin-top:7px;display:flex;gap:7px;flex-wrap:wrap">
+            ${q.status==='Pending review'?`<span style="font-size:11px;color:var(--amber);font-style:italic"><i class="ti ti-clock" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Pending admin approval</span>`:''}
+            ${q.status==='Revision needed'?`<span style="font-size:11px;color:var(--red);font-style:italic"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>Revision requested</span>`:''}
             ${q.status==='Approved'?`<button class="btn btn-success btn-sm" onclick="markSent('${q.id}')"><i class="ti ti-send"></i>Send to customer</button>`:''}            ${(q.status==='Approved'||q.status==='Sent')?`<button class="btn btn-sm" style="border-color:#2b6cb0;color:#2b6cb0;background:#ebf4ff" onclick="exportWord('${q.id}')"><i class="ti ti-file-word"></i>Export Word</button>`:''}
             ${q.status==='Revision needed'?`<button class="btn btn-sm" style="border-color:var(--red);color:var(--red)" onclick="loadRevise('${q.id}')"><i class="ti ti-edit"></i>Edit & resubmit</button>`:''}
             <button class="btn btn-sm" onclick="showHistory('${q.id}')"><i class="ti ti-clock"></i>History</button>
@@ -1698,8 +1700,8 @@ function submitQ(status) {
     sub: +d.sub, gst: +d.gst, total: +d.v,
     status, by: _currentUserName || (currentUser?currentUser.name:'Sales'), date: now,
     history: [
-      {status:'Draft', by:'Rahul Sharma', date: now, note:''},
-      ...(status === 'Pending review' ? [{status:'Pending review', by:'Rahul Sharma', date: now, note:'Submitted for admin approval'}] : [])
+      {status:'Draft', by:_currentUserName||(currentUser?currentUser.name:'Sales'), date: now, note:''},
+      ...(status === 'Pending review' ? [{status:'Pending review', by:_currentUserName||(currentUser?currentUser.name:'Sales'), date: now, note:'Submitted for admin approval'}] : [])
     ]
   });
 
@@ -1771,7 +1773,7 @@ function markSent(id) {
   const q = quotes.find(x => x.id === id);
   if (!q) return;
   q.status = 'Sent';
-  q.history.push({status:'Sent', by:'Rahul Sharma', date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note:'Final quote sent to customer.'});
+  q.history.push({status:'Sent', by:_currentUserName||(currentUser?currentUser.name:'Sales'), date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note:'Final quote sent to customer.'});
   updateBadges(); renderMyQuotes(); renderAllQ(); renderDashboard();
   showToast(`${id} marked as sent to customer`);
 }
@@ -2407,6 +2409,13 @@ async function doLogin() {
   currentUser = matched;
   _currentUserName = matched.name;
   role = matched.role==='admin'?'admin':'team';
+  // Persist session so refresh doesn't log out
+  try {
+    localStorage.setItem('ev_session', JSON.stringify({
+      id: matched.id, name: matched.name, email: matched.email,
+      role: matched.role, status: matched.status
+    }));
+  } catch(e) {}
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main-app').style.display='flex';
   document.getElementById('main-content').style.display='flex';
@@ -2425,7 +2434,8 @@ async function doLogin() {
   nav(role==='admin'?'dashboard':'newq');
 }
 function doLogout() {
-  currentUser=null; role='admin';
+  currentUser=null; role='admin'; _currentUserName='Sales';
+  try { localStorage.removeItem('ev_session'); } catch(e) {}
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('main-app').style.display='none';
   document.getElementById('main-content').style.display='none';
@@ -2546,10 +2556,50 @@ const _origDeleteChargerModel = deleteChargerModel;
 window.deleteChargerModel = function(id) { _origDeleteChargerModel(id); scheduleAutoSave(); };
 
 // ── Init ──────────────────────────────────────────────────────────────
-// Show login screen. Data loads AFTER successful login via doLogin().
-// Pre-populate dropdowns from defaults so they work immediately after login.
 populateCableDropdown();
 populateChargerDropdown();
+
+// Restore session from localStorage if user was previously logged in
+(function restoreSession() {
+  try {
+    const saved = localStorage.getItem('ev_session');
+    if (!saved) return;
+    const u = JSON.parse(saved);
+    if (!u || !u.email || u.status !== 'active') return;
+    currentUser = u;
+    _currentUserName = u.name;
+    role = u.role === 'admin' ? 'admin' : 'team';
+    // Show app, hide login
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display     = 'flex';
+    document.getElementById('main-content').style.display = 'flex';
+    // Set pill
+    const pill = document.getElementById('rpill');
+    if (pill) {
+      const col  = role==='admin'?'#f6e05e':'#90cdf4';
+      const bg   = role==='admin'?'rgba(214,158,46,0.18)':'rgba(49,130,206,0.18)';
+      const icon = role==='admin'?'ti-crown':'ti-user';
+      pill.style.background = bg; pill.style.color = col;
+      pill.innerHTML = `<i class="ti ${icon}"></i><span>${u.name}</span><button onclick="doLogout()" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:11px;opacity:.7">Sign out</button>`;
+    }
+    // Apply role nav
+    document.getElementById('anav').style.display = role==='admin'?'block':'none';
+    document.getElementById('tnav').style.display  = role==='team'?'block':'none';
+    ['n-pricing','n-chargers'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = role==='admin'?'flex':'none';
+    });
+    // Load data
+    loadFromServer().finally(() => {
+      populateCableDropdown(); populateChargerDropdown();
+      calcQ(); updateBadges(); renderDashboard();
+    });
+    nav(role==='admin'?'dashboard':'newq');
+  } catch(e) {
+    console.warn('Session restore failed:', e);
+    try { localStorage.removeItem('ev_session'); } catch(e2) {}
+  }
+})();
 
 // Auto-test DB connection and show result on login card
 async function checkDbFromLogin() {
