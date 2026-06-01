@@ -229,6 +229,24 @@
   .sec-divider { height: 1px; background: var(--border); margin: 18px 0; }
 
 
+
+  /* Login screen */
+  .login-screen { position:fixed; inset:0; background:#0f1117; display:flex; align-items:center; justify-content:center; z-index:9999; }
+  .login-card { background:#1a202c; border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:36px 40px; width:380px; max-width:calc(100vw - 32px); }
+  .login-logo { text-align:center; margin-bottom:28px; }
+  .login-logo img { height:40px; }
+  .login-title { font-size:18px; font-weight:700; color:#fff; text-align:center; margin-bottom:4px; }
+  .login-sub { font-size:13px; color:#718096; text-align:center; margin-bottom:24px; }
+  .login-field { margin-bottom:14px; }
+  .login-field label { display:block; font-size:12px; font-weight:600; color:#a0aec0; margin-bottom:6px; }
+  .login-field input { width:100%; padding:10px 14px; background:#2d3748; border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-size:14px; font-family:inherit; }
+  .login-field input:focus { outline:none; border-color:#3182ce; }
+  .login-btn { width:100%; padding:11px; background:#3182ce; border:none; border-radius:8px; color:#fff; font-size:14px; font-weight:600; cursor:pointer; margin-top:6px; }
+  .login-btn:hover { background:#2b6cb0; }
+  .login-err { background:rgba(229,62,62,0.15); border:1px solid rgba(229,62,62,0.3); border-radius:6px; padding:8px 12px; font-size:12px; color:#fc8181; margin-bottom:12px; display:none; }
+  .login-err.show { display:block; }
+  .app-hidden { display:none !important; }
+
   /* DB sync indicator */
   .db-bar { display:flex; align-items:center; gap:8px; padding:6px 18px; background:#1a202c; border-bottom:1px solid rgba(255,255,255,0.06); font-size:12px; flex-shrink:0; }
   .db-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -256,11 +274,49 @@
 <body>
 
 <!-- SIDEBAR -->
-<div class="sidebar">
-  <div class="logo">
-    <div class="logo-icon">⚡</div>
-    <div class="logo-title">EV Charger Tool</div>
-    <div class="logo-sub">Quotation platform</div>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <img src="data:image/png;base64,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" alt="Exicom" style="height:48px;width:48px;border-radius:50%">
+        <div style="text-align:left">
+          <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px">exicom</div>
+          <div style="font-size:10px;color:#718096;letter-spacing:.06em">beautifully engineered™</div>
+        </div>
+      </div>
+    </div>
+    <div class="login-title">EV Charger Quotation Tool</div>
+    <div class="login-sub">Sign in to continue</div>
+    <div class="login-err" id="login-err">Incorrect email or password</div>
+    <div class="login-field">
+      <label>Email address</label>
+      <input type="email" id="login-email" placeholder="you@company.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign in</button>
+    <p style="text-align:center;font-size:11px;color:#4a5568;margin-top:16px">Managed by Super Admin · Contact admin to get access</p>
+  </div>
+</div>
+
+<div class="sidebar" id="main-app" style="display:none">
+  <div class="logo" style="padding:12px 14px 10px">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
+      <img src="data:image/png;base64,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" alt="Exicom" style="height:30px;width:30px;border-radius:50%;flex-shrink:0">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:-0.3px">exicom</div>
+        <div style="font-size:9px;color:#4a5568;letter-spacing:.04em">beautifully engineered&#x2122;</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#718096">EV Charger Quotation Tool</div>
+  </div>
+    </div>
+    <div style="font-size:10px;color:#718096">EV Charger Quotation Tool</div>
   </div>
   <div class="nav" id="anav">
     <div class="nav-section">Admin</div>
@@ -282,7 +338,7 @@
 </div>
 
 <!-- MAIN -->
-<div class="main">
+<div class="main" style="display:none" id="main-content">
   <div class="topbar">
     <div class="topbar-left">
       <h1 id="ptitle">Dashboard</h1>
@@ -395,13 +451,14 @@
     <!-- ═══ TEAM ═══ -->
     <div class="sec" id="sec-team">
       <div class="card">
-        <div class="card-header"><div class="card-title">Team members</div><button class="btn btn-primary btn-sm"><i class="ti ti-user-plus"></i>Invite member</button></div>
-        <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Quotes</th><th>Status</th></tr></thead><tbody>
-          <tr><td><strong>You (Admin)</strong></td><td>admin@evcharger.in</td><td><span class="tag tag-amber">Super Admin</span></td><td>—</td><td><span class="tag tag-green">Active</span></td></tr>
-          <tr><td>Rahul Sharma</td><td>rahul@evcharger.in</td><td><span class="tag tag-blue">Sales</span></td><td id="team-rahul-count">3</td><td><span class="tag tag-green">Active</span></td></tr>
-          <tr><td>Priya Nair</td><td>priya@evcharger.in</td><td><span class="tag tag-blue">Sales</span></td><td>2</td><td><span class="tag tag-green">Active</span></td></tr>
-          <tr><td>Arjun Mehta</td><td>arjun@evcharger.in</td><td><span class="tag tag-gray">Viewer</span></td><td>0</td><td><span class="tag tag-green">Active</span></td></tr>
-        </tbody></table></div>
+        <div class="card-header">
+          <div><div class="card-title">Team members</div><div class="card-sub">Add users and set their role — they log in with email & password</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openAddUser()"><i class="ti ti-user-plus"></i>Add member</button>
+        </div>
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Quotes</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="team-tbody"></tbody></table>
+        </div>
       </div>
     </div>
 
@@ -789,6 +846,41 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-cable')">Cancel</button>
       <button class="btn btn-success" onclick="saveCable()"><i class="ti ti-check"></i>Save cable type</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT USER MODAL -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal" style="width:440px">
+    <div class="modal-title" id="user-modal-title"><i class="ti ti-user-plus"></i>Add team member</div>
+    <input type="hidden" id="user-edit-id" value="">
+    <div class="two-col" style="margin-bottom:12px">
+      <div class="form-group"><label>Full name <span class="required">*</span></label><input id="u-name" placeholder="e.g. Rahul Sharma"></div>
+      <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" id="u-email" placeholder="rahul@company.com"></div>
+    </div>
+    <div class="two-col" style="margin-bottom:12px">
+      <div class="form-group">
+        <label>Role <span class="required">*</span></label>
+        <select id="u-role">
+          <option value="admin">Super Admin</option>
+          <option value="sales" selected>Sales</option>
+          <option value="viewer">Viewer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="u-status"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:4px">
+      <label id="u-pwd-label">Password <span class="required">*</span></label>
+      <input type="password" id="u-pwd" placeholder="Minimum 6 characters">
+      <div style="font-size:11px;color:var(--text3);margin-top:3px" id="u-pwd-hint">User will log in with this password. Share it with them securely.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-user')">Cancel</button>
+      <button class="btn btn-success" onclick="saveUser()"><i class="ti ti-check"></i>Save member</button>
     </div>
   </div>
 </div>
@@ -1620,7 +1712,7 @@ function submitQ(status) {
     secA: +d.b, secB: +d.cx, secC: +d.ao,
     base: +d.b, cableX: +d.cx, aoTotal: +d.ao,
     sub: +d.sub, gst: +d.gst, total: +d.v,
-    status, by: 'Rahul Sharma', date: now,
+    status, by: _currentUserName || (currentUser ? currentUser.name : 'Sales'), date: now,
     history: [
       {status:'Draft', by:'Rahul Sharma', date: now, note:''},
       ...(status === 'Pending review' ? [{status:'Pending review', by:'Rahul Sharma', date: now, note:'Submitted for admin approval'}] : [])
@@ -1978,8 +2070,16 @@ function exportWordFallback(q) {
 
   const docHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><meta name=ProgId content=Word.Document><style>@page{size:A4;margin:2cm}body{font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1A202C}table{border-collapse:collapse;width:100%}.gt td{font-weight:bold;font-size:12pt;background:#1A3A5C;color:#fff}</style></head><body>
 <table style="width:100%;border:none;border-bottom:3px solid #2E6DB4;margin-bottom:10pt"><tr>
-<td style="border:none;padding:8pt 0"><b style="font-size:16pt;color:#1A3A5C">EV CHARGER INSTALLATION SERVICES</b><br><span style="font-size:9pt;color:#4A5568;font-style:italic">Professional EV Charging Solutions</span></td>
-<td style="border:none;text-align:right;padding:8pt 0"><b style="font-size:22pt;color:#2E6DB4">QUOTATION</b></td></tr></table>
+<td style="border:none;padding:8pt 0;vertical-align:middle">
+  <div style="display:flex;align-items:center;gap:10pt">
+    <img src="data:image/png;base64,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" alt="Exicom" style="height:40pt;width:40pt;border-radius:50%">
+    <div>
+      <div style="font-size:18pt;font-weight:bold;color:#1A3A5C;letter-spacing:-0.5pt">exicom</div>
+      <div style="font-size:8pt;color:#718096;font-style:italic">beautifully engineered™ | EV Charger Installation Services</div>
+    </div>
+  </div>
+</td>
+<td style="border:none;text-align:right;padding:8pt 0;vertical-align:middle"><b style="font-size:22pt;color:#2E6DB4">QUOTATION</b></td></tr></table>
 <table style="width:100%;border:none;margin-bottom:8pt"><tr>
 <td style="border:none;font-size:9pt;color:#4A5568">Ref: ${q.id}</td>
 <td style="border:none;text-align:right;font-size:9pt;color:#4A5568">Date: ${q.date||today}</td></tr></table>
@@ -2079,6 +2179,216 @@ function saveConfig() {
   });
 }
 
+
+/* ═══════════════════════════════════════════════════
+   AUTH — Login & User Management
+═══════════════════════════════════════════════════ */
+let currentUser = null;  /* { id, name, email, role } */
+let users = [];          /* loaded from Supabase */
+
+/* Default admin — always available even before Supabase is set up */
+const DEFAULT_ADMIN = { id:'admin_default', name:'Admin', email:'admin@exicom.in', password:'admin123', role:'admin', status:'active' };
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pwd   = document.getElementById('login-pwd').value;
+  const errEl = document.getElementById('login-err');
+  errEl.classList.remove('show');
+
+  if (!email || !pwd) { errEl.textContent = 'Please enter email and password'; errEl.classList.add('show'); return; }
+
+  /* Try Supabase users table first */
+  let matched = null;
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    try {
+      const res = await sbFetch(`users?email=eq.${encodeURIComponent(email)}&status=eq.active&select=*`,
+        { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const rows = await res.json();
+        const u = rows[0];
+        if (u && u.password === pwd) matched = u;
+      }
+    } catch(e) { console.warn('Supabase auth failed, trying local:', e.message); }
+  }
+
+  /* Fallback: check local users array + default admin */
+  if (!matched) {
+    const local = [...users, DEFAULT_ADMIN].find(u =>
+      u.email.toLowerCase() === email && u.password === pwd && u.status === 'active');
+    if (local) matched = local;
+  }
+
+  if (!matched) {
+    errEl.textContent = 'Incorrect email or password';
+    errEl.classList.add('show');
+    return;
+  }
+
+  currentUser = matched;
+  role = matched.role === 'admin' ? 'admin' : 'team';
+
+  /* Hide login, show app */
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+  document.getElementById('main-app').nextElementSibling && (document.querySelector('.main').style.display = 'flex');
+
+  /* Update sidebar role pill to show logged-in user name */
+  const pill = document.getElementById('rpill');
+  if (pill) {
+    if (role === 'admin') {
+      pill.style.background = 'rgba(214,158,46,0.18)';
+      pill.style.color = '#f6e05e';
+      pill.innerHTML = `<i class="ti ti-crown"></i><span>${matched.name}</span><button onclick="doLogout()" style="margin-left:auto;background:none;border:none;color:#f6e05e;cursor:pointer;font-size:11px;padding:0">Sign out</button>`;
+    } else {
+      pill.style.background = 'rgba(49,130,206,0.18)';
+      pill.style.color = '#90cdf4';
+      pill.innerHTML = `<i class="ti ti-user"></i><span>${matched.name}</span><button onclick="doLogout()" style="margin-left:auto;background:none;border:none;color:#90cdf4;cursor:pointer;font-size:11px;padding:0">Sign out</button>`;
+    }
+  }
+
+  /* Apply role-based nav visibility */
+  document.getElementById('anav').style.display = role === 'admin' ? 'block' : 'none';
+  document.getElementById('tnav').style.display = role === 'team'  ? 'block' : 'none';
+  ['n-pricing','n-chargers'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = role === 'admin' ? 'flex' : 'none';
+  });
+
+  /* Load data */
+  loadFromServer().finally(() => {
+    populateCableDropdown(); populateChargerDropdown();
+    calcQ(); updateBadges(); renderDashboard();
+    /* patch submitQ to use logged-in user name */
+    _currentUserName = matched.name;
+  });
+
+  nav(role === 'admin' ? 'dashboard' : 'newq');
+}
+
+function doLogout() {
+  currentUser = null; role = 'admin';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pwd').value   = '';
+  document.getElementById('login-err').classList.remove('show');
+}
+
+/* ── User management ── */
+let _currentUserName = 'Sales';
+
+async function loadUsers() {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+  try {
+    const res = await sbFetch('users?select=*&order=name.asc', { signal: AbortSignal.timeout(5000) });
+    if (res.ok) users = await res.json();
+  } catch(e) { console.warn('loadUsers failed:', e.message); }
+}
+
+function renderTeam() {
+  loadUsers().then(() => {
+    const allUsers = users.length ? users : [DEFAULT_ADMIN];
+    const roleTag  = { admin:'tag-amber', sales:'tag-blue', viewer:'tag-gray' };
+    const roleLabel = { admin:'Super Admin', sales:'Sales', viewer:'Viewer' };
+    const qCount   = u => quotes.filter(q => (q.by||q.prepared_by||'').toLowerCase().includes(u.name.toLowerCase())).length;
+
+    document.getElementById('team-tbody').innerHTML = allUsers.map(u => `
+      <tr>
+        <td style="font-weight:600">${u.name}${u.id===DEFAULT_ADMIN.id?' <span style="font-size:10px;color:var(--text3)">(default)</span>':''}</td>
+        <td style="color:var(--text2);font-size:12px">${u.email}</td>
+        <td><span class="tag ${roleTag[u.role]||'tag-gray'}">${roleLabel[u.role]||u.role}</span></td>
+        <td>${qCount(u)}</td>
+        <td><span class="tag ${u.status==='active'?'tag-green':'tag-gray'}">${u.status||'active'}</span></td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" onclick="editUser('${u.id}')"><i class="ti ti-edit"></i>Edit</button>
+            ${u.id!==DEFAULT_ADMIN.id?`<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${u.name}')"><i class="ti ti-trash"></i></button>`:''}
+          </div>
+        </td>
+      </tr>`).join('');
+  });
+}
+
+function openAddUser() {
+  document.getElementById('user-modal-title').innerHTML = '<i class="ti ti-user-plus"></i>Add team member';
+  document.getElementById('user-edit-id').value = '';
+  ['u-name','u-email','u-pwd'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('u-role').value   = 'sales';
+  document.getElementById('u-status').value = 'active';
+  document.getElementById('u-pwd-label').innerHTML = 'Password <span class="required">*</span>';
+  document.getElementById('u-pwd-hint').textContent = 'User will log in with this password. Share it with them securely.';
+  document.getElementById('modal-user').classList.add('open');
+}
+
+function editUser(id) {
+  const u = users.find(x => x.id === id) || (id === DEFAULT_ADMIN.id ? DEFAULT_ADMIN : null);
+  if (!u) return;
+  document.getElementById('user-modal-title').innerHTML = '<i class="ti ti-edit"></i>Edit team member';
+  document.getElementById('user-edit-id').value = id;
+  document.getElementById('u-name').value   = u.name;
+  document.getElementById('u-email').value  = u.email;
+  document.getElementById('u-role').value   = u.role;
+  document.getElementById('u-status').value = u.status||'active';
+  document.getElementById('u-pwd').value    = '';
+  document.getElementById('u-pwd-label').innerHTML = 'New password';
+  document.getElementById('u-pwd-hint').textContent = 'Leave blank to keep current password.';
+  document.getElementById('modal-user').classList.add('open');
+}
+
+async function saveUser() {
+  const name   = document.getElementById('u-name').value.trim();
+  const email  = document.getElementById('u-email').value.trim().toLowerCase();
+  const role_  = document.getElementById('u-role').value;
+  const status = document.getElementById('u-status').value;
+  const pwd    = document.getElementById('u-pwd').value;
+  const editId = document.getElementById('user-edit-id').value;
+
+  if (!name)  { showToast('Please enter a name', 'error'); return; }
+  if (!email) { showToast('Please enter an email', 'error'); return; }
+  if (!editId && !pwd) { showToast('Please enter a password for the new user', 'error'); return; }
+  if (pwd && pwd.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+
+  const row = { name, email, role: role_, status, ...(pwd ? { password: pwd } : {}) };
+
+  try {
+    if (editId) {
+      row.id = editId;
+      await sbUpsert('users', [row]);
+      const idx = users.findIndex(u => u.id === editId);
+      if (idx >= 0) users[idx] = { ...users[idx], ...row };
+      showToast(`${name} updated`);
+    } else {
+      row.id = 'user_' + Date.now();
+      await sbUpsert('users', [row]);
+      users.push(row);
+      showToast(`${name} added — they can now log in at this URL`);
+    }
+  } catch(e) {
+    /* If Supabase not configured, manage locally */
+    if (editId) {
+      const idx = users.findIndex(u => u.id === editId);
+      if (idx >= 0) users[idx] = { ...users[idx], ...row, id: editId };
+    } else {
+      row.id = 'user_' + Date.now();
+      users.push(row);
+    }
+    showToast(editId ? `${name} updated (local)` : `${name} added (local — configure Supabase to persist)`);
+  }
+  closeModal('modal-user');
+  renderTeam();
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Remove ${name} from the team? They will no longer be able to log in.`)) return;
+  try {
+    await sbDelete('users', [id]);
+  } catch(e) { /* ignore if Supabase not available */ }
+  users = users.filter(u => u.id !== id);
+  showToast(`${name} removed`);
+  renderTeam();
+}
+
+
 function savePricing() { populateCableDropdown(); populateChargerDropdown(); renderChargerModels(); showToast('Prices saved — active on all new quotes'); }
 function resetPrices() { prices = JSON.parse(JSON.stringify(defaultPrices)); cables = JSON.parse(JSON.stringify(defaultCables)); renderPricing(); showToast('Prices reset to defaults'); }
 
@@ -2105,6 +2415,7 @@ function nav(id) {
   if (m.id) document.getElementById(m.id)?.classList.add('active');
   if (id === 'pricing')  renderPricing();
   if (id === 'chargers') { renderChargerModels(); populateChargerCableSelect(''); }
+  if (id === 'team')     renderTeam();
   if (id === 'allq')    renderAllQ();
   if (id === 'approvals') renderApprovals();
   if (id === 'myq')     renderMyQuotes();
@@ -2419,18 +2730,16 @@ window.deleteCable = function(i) { _origDeleteCable(i); scheduleAutoSave(); };
 const _origDeleteChargerModel = deleteChargerModel;
 window.deleteChargerModel = function(id) { _origDeleteChargerModel(id); scheduleAutoSave(); };
 
-// Init — load from server, then render regardless of online/offline result
-/* Show/hide setup button based on config */
+// Init — show login screen; data loads after successful login
 if (SUPABASE_URL && SUPABASE_KEY) {
   const sb = document.getElementById('setup-btn');
   if (sb) sb.style.display = 'none';
 }
-loadFromServer().finally(() => {
-  populateCableDropdown();
-  populateChargerDropdown();
-  calcQ();
-  updateBadges();
-  renderDashboard();
+/* Show login screen — app loads after doLogin() succeeds */
+document.getElementById('login-screen').style.display = 'flex';
+/* Allow Enter key on email field */
+document.getElementById('login-email')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-pwd').focus();
 });
 </script>
 </body>
