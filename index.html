@@ -60,7 +60,8 @@
   .nb-warn { background: #d69e2e; color: #fff; }
   .nb-info { background: #3182ce; color: #fff; }
   .nb-gray { background: #4a5568; color: #cbd5e0; }
-  .role-pill { margin: 10px 10px 14px; padding: 9px 12px; background: rgba(214,158,46,0.18); border-radius: var(--radius); font-size: 12px; font-weight: 600; color: #f6e05e; display: flex; align-items: center; gap: 8px; cursor: pointer; border: 1px solid rgba(214,158,46,0.3); transition: all .15s; }
+  .role-pill { margin: 10px 10px 14px; padding: 9px 12px; background: rgba(214,158,46,0.18); border-radius: var(--radius); font-size: 12px; font-weight: 600; color: #f6e05e; display: none; align-items: center; gap: 8px; cursor: pointer; border: 1px solid rgba(214,158,46,0.3); transition: all .15s; }
+  .role-pill.visible { display: flex; }
   .role-pill:hover { background: rgba(214,158,46,0.28); }
   .role-pill i { font-size: 16px; }
 
@@ -243,7 +244,8 @@
 
 
   /* ── Login screen ── */
-  .login-screen { position:fixed; inset:0; background:#0f1117; display:flex; align-items:center; justify-content:center; z-index:9999; }
+  .login-screen { position:fixed; inset:0; background:#0f1117; display:none; align-items:center; justify-content:center; z-index:9999; }
+  .login-screen.visible { display:flex; }
   .login-card { background:#1a202c; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:36px 40px; width:380px; max-width:calc(100vw - 32px); }
   .login-logo { text-align:center; margin-bottom:24px; }
   .login-title { font-size:18px; font-weight:700; color:#fff; text-align:center; margin-bottom:4px; }
@@ -293,6 +295,40 @@
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div class="login-screen visible" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <img src="data:image/png;base64,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" alt="Exicom" style="height:44px;width:44px;border-radius:50%">
+        <div style="text-align:left">
+          <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px">exicom</div>
+          <div style="font-size:10px;color:#718096;letter-spacing:.06em">beautifully engineered&#x2122;</div>
+        </div>
+      </div>
+    </div>
+    <div class="login-title">EV Charger Quotation Tool</div>
+    <div class="login-sub">Sign in to continue</div>
+    <div class="login-err" id="login-err">Incorrect email or password</div>
+    <div class="login-field">
+      <label>Email address</label>
+      <input type="email" id="login-email" placeholder="you@exicom.in" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign in</button>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;gap:8px">
+      <div class="db-dot" id="db-dot-login" style="width:8px;height:8px;border-radius:50%;background:#e53e3e;flex-shrink:0"></div>
+      <span id="db-status-login" style="font-size:11px;color:#718096">Checking database…</span>
+      <button onclick="checkDbFromLogin()" style="padding:2px 8px;font-size:10px;border:1px solid rgba(255,255,255,0.15);border-radius:4px;background:transparent;color:#718096;cursor:pointer">Retry</button>
+    </div>
+    <p style="text-align:center;font-size:11px;color:#4a5568;margin-top:12px">Contact admin for access</p>
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">
@@ -314,7 +350,7 @@
     <button class="nav-item" onclick="nav('newq')" id="n-newq"><i class="ti ti-plus"></i>New quote</button>
     <button class="nav-item" onclick="nav('myq')" id="n-myq"><i class="ti ti-file-text"></i>My quotes<span class="nbadge nb-info" id="myq-badge">0</span></button>
   </div>
-  <div class="role-pill" <div class="role-pill" id="rpill" style="display:none">
+  <div class="role-pill" id="rpill">
     <i class="ti ti-user" id="rpill-icon"></i>
     <span id="rlabel"></span>
     <button onclick="doLogout()" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:11px;opacity:.7">Sign out</button>
@@ -2354,12 +2390,12 @@ async function doLogin() {
   role = matched.role==='admin'?'admin':'team';
   document.body.dataset.role = role;
   try { localStorage.setItem('ev_session', JSON.stringify({id:matched.id,name:matched.name,email:matched.email,role:matched.role,status:matched.status})); } catch(e) {}
-  document.getElementById('login-screen').style.display='none';
+  const _ls2=document.getElementById('login-screen'); if(_ls2){_ls2.classList.remove('visible');_ls2.style.display='';};
   document.getElementById('main-app').style.display='flex';
   document.getElementById('main-content').style.display='flex';
   const pill=document.getElementById('rpill');
   if (pill) {
-    pill.style.display='flex';
+    pill.classList.add('visible');
     pill.style.background=role==='admin'?'rgba(214,158,46,0.18)':'rgba(49,130,206,0.18)';
     pill.style.color=role==='admin'?'#f6e05e':'#90cdf4';
     const _ic=pill.querySelector('#rpill-icon'); if(_ic) _ic.className='ti '+(role==='admin'?'ti-crown':'ti-user');
@@ -2376,8 +2412,8 @@ function doLogout() {
   currentUser=null; role='admin';
   try { localStorage.removeItem('ev_session'); } catch(e) {}
   document.body.removeAttribute('data-role');
-  const _p=document.getElementById('rpill'); if(_p) _p.style.display='none';
-  document.getElementById('login-screen').style.display='flex';
+  const _p=document.getElementById('rpill'); if(_p) _p.classList.remove('visible');
+  const _ls3=document.getElementById('login-screen'); if(_ls3){_ls3.classList.add('visible');};
   document.getElementById('main-app').style.display='none';
   document.getElementById('main-content').style.display='none';
   document.getElementById('login-email').value='';
@@ -2521,13 +2557,13 @@ populateChargerDropdown();
     const ls = document.getElementById('login-screen');
     const ma = document.getElementById('main-app');
     const mc = document.getElementById('main-content');
-    if (ls) ls.style.display = 'none';
+    if (ls) ls.classList.remove('visible');
     if (ma) ma.style.display = 'flex';
     if (mc) mc.style.display = 'flex';
     // Update pill with real name
     const pill = document.getElementById('rpill');
     if (pill) {
-      pill.style.display = 'flex';
+      pill.classList.add('visible');
       pill.style.background = role==='admin'?'rgba(214,158,46,0.18)':'rgba(49,130,206,0.18)';
       pill.style.color = role==='admin'?'#f6e05e':'#90cdf4';
       const ic  = pill.querySelector('#rpill-icon'); if(ic)  ic.className = 'ti '+(role==='admin'?'ti-crown':'ti-user');
