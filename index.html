@@ -1582,14 +1582,33 @@ function updateRateBadge() {
 
 /* ── Register / login screen toggle ── */
 function showRegister() {
-  document.getElementById('login-screen').style.display    = 'none';
-  document.getElementById('register-screen').style.display = 'flex';
+  const ls = document.getElementById('login-screen');
+  const rs = document.getElementById('register-screen');
+  ls.style.display = '';           /* clear any inline style */
+  ls.classList.remove('visible');  /* hide login via CSS */
+  rs.style.display = '';
+  rs.classList.add('visible');     /* show register via CSS */
+  const _ids=['reg-name','reg-email','reg-pwd','reg-pwd2'];
+  _ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const _re=document.getElementById('reg-err'); if(_re){_re.style.display='none';_re.textContent='';}
+  const _rs=document.getElementById('reg-success'); if(_rs) _rs.style.display='none';
+  const _rb=document.getElementById('reg-btn'); if(_rb){_rb.textContent='Request access';_rb.disabled=false;}
   document.getElementById('reg-name').focus();
 }
 function showLogin() {
-  document.getElementById('register-screen').style.display = 'none';
   const ls = document.getElementById('login-screen');
-  ls.classList.add('visible');
+  const rs = document.getElementById('register-screen');
+  rs.style.display = '';
+  rs.classList.remove('visible');  /* hide register */
+  ls.style.display = '';           /* clear any inline style */
+  ls.classList.add('visible');     /* show login via CSS */
+  /* ensure app is hidden behind login */
+  const ma = document.getElementById('main-app');
+  const mc = document.getElementById('main-content');
+  if (!currentUser) {
+    if (ma) ma.style.display = 'none';
+    if (mc) mc.style.display = 'none';
+  }
 }
 async function doRegister() {
   const name  = document.getElementById('reg-name').value.trim();
@@ -2581,7 +2600,8 @@ function doLogout() {
   try { localStorage.removeItem('ev_session'); } catch(e) {}
   document.body.removeAttribute('data-role');
   const _p=document.getElementById('rpill'); if(_p) _p.classList.remove('visible');
-  const _ls3=document.getElementById('login-screen'); if(_ls3){_ls3.classList.add('visible');};
+  const _rs=document.getElementById('register-screen'); if(_rs){_rs.style.display='';_rs.classList.remove('visible');}
+  const _ls3=document.getElementById('login-screen'); if(_ls3){_ls3.style.display='';_ls3.classList.add('visible');}
   document.getElementById('main-app').style.display='none';
   document.getElementById('main-content').style.display='none';
   document.getElementById('login-email').value='';
