@@ -516,8 +516,8 @@
         </div>
         <div class="three-col">
           <div class="form-group">
-            <label>Customer type <span class="required">*</span></label>
-            <select id="qctype" onchange="applyPricingTier()">
+            <label>Customer type <span class="required">*</span> <span id="rate-type-badge" style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:#ebf4ff;color:#1a4a7a">Retail pricing</span></label>
+            <select id="qctype" onchange="applyPricingTier();updateRateBadge()">
               <option value="Residential" selected>Residential (Retail)</option>
               <option value="Commercial">Commercial (B2B)</option>
               <option value="Industrial">Industrial (B2B)</option>
@@ -866,7 +866,17 @@
           <option>Visit</option><option>Sqm</option><option>Kg</option><option>LS</option>
         </select>
       </div>
-      <div class="form-group"><label>Rate (₹) <span class="required">*</span></label><input type="number" id="comp-rate" placeholder="0" min="0"></div>
+      <div class="two-col" style="gap:8px">
+        <div class="form-group">
+          <label>Retail rate (₹) <span class="required">*</span></label>
+          <input type="number" id="comp-rate" placeholder="0" min="0" style="background:#ebf4ff;border-color:#bee3f8">
+        </div>
+        <div class="form-group">
+          <label>B2B rate (₹)</label>
+          <input type="number" id="comp-b2b" placeholder="Same as retail" min="0" style="background:#f0fff4;border-color:#9ae6b4">
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">Leave blank to use retail rate</div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-comp')">Cancel</button>
@@ -979,19 +989,19 @@ const F = v => '₹' + Math.round(v).toLocaleString('en-IN');
 let role = 'admin', activeQId = null;
 
 const defaultPrices = [
-  {id:'survey',   name:'Site survey & feasibility',         cat:'Service',     unit:'Visit', rate:1200},
-  {id:'ic',       name:'Installation & commissioning',      cat:'Service',     unit:'Visit', rate:2500},
-  {id:'transport',name:'Material transport (within 40km)',  cat:'Logistics',   unit:'Unit',  rate:800},
-  {id:'mcb2p',    name:'40A 2P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:850},
-  {id:'mcb4p25',  name:'25A 4P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:1100},
-  {id:'mcb4p40',  name:'40A 4P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:1250},
-  {id:'box2p',    name:'Grasp 2P IP65 MCB box',             cat:'Enclosure',   unit:'Unit',  rate:650},
-  {id:'box4p',    name:'Grasp 4P IP65 MCB box',             cat:'Enclosure',   unit:'Unit',  rate:850},
-  {id:'acc',      name:'Cable glands, lugs & accessories',  cat:'Accessories', unit:'Set',   rate:550},
-  {id:'conduit',  name:'Polyamide conduit with clamps',     cat:'Conduit',     unit:'Metre', rate:85},
-  {id:'earth',    name:'Chemical earthing (17.2mm Cu rod)', cat:'Earthing',    unit:'Unit',  rate:8500},
-  {id:'xvisit',   name:'Extra visit charge',                cat:'Service',     unit:'Visit', rate:1500},
-  {id:'dbpanel',  name:'DB panel installation (OEM)',       cat:'Panel',       unit:'Unit',  rate:1200},
+  {id:'survey',   name:'Site survey & feasibility',         cat:'Service',     unit:'Visit', rate:1200, rateB2B:1200},
+  {id:'ic',       name:'Installation & commissioning',      cat:'Service',     unit:'Visit', rate:2500, rateB2B:2500},
+  {id:'transport',name:'Material transport (within 40km)',  cat:'Logistics',   unit:'Unit',  rate:800, rateB2B:800},
+  {id:'mcb2p',    name:'40A 2P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:850, rateB2B:850},
+  {id:'mcb4p25',  name:'25A 4P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:1100, rateB2B:1100},
+  {id:'mcb4p40',  name:'40A 4P MCB – Havells / L&T',       cat:'MCB',         unit:'Unit',  rate:1250, rateB2B:1250},
+  {id:'box2p',    name:'Grasp 2P IP65 MCB box',             cat:'Enclosure',   unit:'Unit',  rate:650, rateB2B:650},
+  {id:'box4p',    name:'Grasp 4P IP65 MCB box',             cat:'Enclosure',   unit:'Unit',  rate:850, rateB2B:850},
+  {id:'acc',      name:'Cable glands, lugs & accessories',  cat:'Accessories', unit:'Set',   rate:550, rateB2B:550},
+  {id:'conduit',  name:'Polyamide conduit with clamps',     cat:'Conduit',     unit:'Metre', rate:85, rateB2B:85},
+  {id:'earth',    name:'Chemical earthing (17.2mm Cu rod)', cat:'Earthing',    unit:'Unit',  rate:8500, rateB2B:8500},
+  {id:'xvisit',   name:'Extra visit charge',                cat:'Service',     unit:'Visit', rate:1500, rateB2B:1500},
+  {id:'dbpanel',  name:'DB panel installation (OEM)',       cat:'Panel',       unit:'Unit',  rate:1200, rateB2B:1200},
 ];
 let prices = JSON.parse(JSON.stringify(defaultPrices));
 
@@ -1228,7 +1238,8 @@ function renderPricing() {
             .map(u=>`<option value="${u}" ${p.unit===u?'selected':''}>${u}</option>`).join('')}
         </select>
       </td>
-      <td><input class="price-inp" type="number" value="${p.rate}" onchange="prices[${i}].rate=+this.value" min="0"></td>
+      <td><input class="price-inp" type="number" value="${p.rate}" onchange="prices[${i}].rate=+this.value" min="0" style="background:#ebf4ff;border-color:#bee3f8" title="Retail rate"></td>
+      <td><input class="price-inp" type="number" value="${p.rateB2B||p.rate}" onchange="prices[${i}].rateB2B=+this.value" min="0" style="background:#f0fff4;border-color:#9ae6b4" title="B2B rate"></td>
       <td>
         <div style="display:flex;gap:6px">
           <button class="btn btn-sm" onclick="editComp(${i})" title="Edit"><i class="ti ti-edit"></i>Edit</button>
@@ -1301,24 +1312,27 @@ function editComp(i) {
   document.getElementById('comp-name').value = p.name;
   document.getElementById('comp-cat').value  = p.cat;
   document.getElementById('comp-unit').value = p.unit;
-  document.getElementById('comp-rate').value = p.rate;
+  document.getElementById('comp-rate').value = p.rate || 0;
+  const _b2b = document.getElementById('comp-b2b');
+  if (_b2b) _b2b.value = (p.rateB2B && p.rateB2B !== p.rate) ? p.rateB2B : '';
   document.getElementById('modal-comp').classList.add('open');
 }
 function saveComp() {
   const name = document.getElementById('comp-name').value.trim();
   const cat  = document.getElementById('comp-cat').value;
   const unit = document.getElementById('comp-unit').value;
-  const rate = +document.getElementById('comp-rate').value;
+  const rate    = +document.getElementById('comp-rate').value;
+  const rateB2B = +(document.getElementById('comp-b2b')?.value || '') || rate;
   if (!name) { showToast('Please enter a component name', 'error'); return; }
   if (!cat)  { showToast('Please select a category', 'error'); return; }
   if (!unit) { showToast('Please select a unit', 'error'); return; }
   const idx = +document.getElementById('comp-edit-idx').value;
   if (idx >= 0) {
-    prices[idx] = { ...prices[idx], name, cat, unit, rate };
+    prices[idx] = { ...prices[idx], name, cat, unit, rate, rateB2B };
     showToast('Component updated');
   } else {
     const id = 'comp_' + Date.now();
-    prices.push({ id, name, cat, unit, rate });
+    prices.push({ id, name, cat, unit, rate, rateB2B });
     showToast('Component added');
   }
   closeModal('modal-comp');
@@ -1517,6 +1531,21 @@ function getBomIncl(id) { return bomIncl[id] !== undefined ? bomIncl[id] : true;
 
 const CTYPE_DISC = {'Residential':0,'Commercial':0,'Industrial':5,'Fleet / EV Hub':8,'Government / PSU':10,'Channel Partner':12};
 
+
+function updateRateBadge() {
+  const ctype = document.getElementById('qctype')?.value || 'Residential';
+  const badge = document.getElementById('rate-type-badge');
+  if (!badge) return;
+  if (ctype === 'Residential') {
+    badge.textContent = 'Retail pricing';
+    badge.style.background = '#ebf4ff'; badge.style.color = '#1a4a7a';
+  } else {
+    badge.textContent = 'B2B pricing';
+    badge.style.background = '#f0fff4'; badge.style.color = '#1c5e3a';
+  }
+  calcQ();
+}
+
 function applyPricingTier() {
   const ctype = document.getElementById('qctype')?.value || '';
   const tier  = document.getElementById('qptier')?.value || 'Standard';
@@ -1535,6 +1564,7 @@ function applyPricingTier() {
 function calcQ() {
   const cableId = document.getElementById('qcable')?.value || '';
   const run     = +document.getElementById('qrun').value || 0;
+  const isRetailQ = (document.getElementById('qctype')?.value || 'Residential') === 'Residential';
 
   /* ─── SECTION A: BoM — all components, fully editable ─── */
   let secATotal = 0;
@@ -2327,7 +2357,7 @@ async function sbDelete(table, idList) {
   await sbFetch(table+'?id=in.('+ids+')', {method:'DELETE', prefer:'return=minimal'});
 }
 
-function pricingRows()  { return prices.map(p => ({id:p.id,name:p.name,cat:p.cat,unit:p.unit,rate:p.rate})); }
+function pricingRows()  { return prices.map(p => ({id:p.id,name:p.name,cat:p.cat,unit:p.unit,rate:p.rate,rate_b2b:p.rateB2B||p.rate})); }
 function cableRows()    { return cables.map(c => ({id:c.id,name:c.name,used_in:c.used||'',list_price:c.listPrice||c.rate,discount:c.discount||0,rate:getCR(c.id)})); }
 function chargerRows()  { return chargerModels.map(m => ({id:m.id,name:m.name,kw:m.kw,phase:m.phase,cable_key:m.cableKey||'',components:m.components||[]})); }
 function quoteRow(q) {
@@ -2384,7 +2414,7 @@ async function loadFromServer() {
   try {
     const [qRows,pRows,cRows,mRows] = await Promise.all([sbGet('quotes'),sbGet('pricing'),sbGet('cable_rates'),sbGet('charger_models')]);
     quotes = qRows.map(rowToQuote).sort((a,b)=>(b.id||'').localeCompare(a.id||''));
-    if (pRows.length)  prices = pRows;
+    if (pRows.length)  prices = pRows.map(p => ({...p, rateB2B: p.rate_b2b || p.rateB2B || p.rate}));
     if (cRows.length)  cables = cRows.map(rowToCable);
     if (mRows.length)  chargerModels = mRows.map(rowToModel);
     saveLocal();
