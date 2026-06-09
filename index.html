@@ -1760,9 +1760,7 @@ function submitQ(status) {
   quotes.unshift({
     id, customer: cust || '—', addr: document.getElementById('qa').value || '—',
     phone: document.getElementById('qph').value || '', email: document.getElementById('qem').value || '',
-    customerType: document.getElementById('qctype')?.value || '',
-    pricingTier:  document.getElementById('qptier')?.value || 'Standard',
-    discountPct:  +(document.getElementById('qdisc')?.value)||0,
+    customerType: document.getElementById('qctype')?.value || 'Residential',
     siteDesc: document.getElementById('qsite').value.trim(),
     model: chargerObj ? chargerObj.name : (siteDesc || 'Custom BoM'), run, qty,
     cableType: cObj ? cObj.name : '',
@@ -1782,9 +1780,7 @@ function submitQ(status) {
   ['qn','qa','qph','qem','qsite'].forEach(fid => document.getElementById(fid).value = '');
   document.getElementById('qcharger').value = '';
   document.getElementById('qcable').value = '';
-  const _ctype=document.getElementById('qctype'); if(_ctype) _ctype.value='';
-  const _ptier=document.getElementById('qptier'); if(_ptier) _ptier.value='Standard';
-  const _qdsc=document.getElementById('qdisc'); if(_qdsc){_qdsc.value=0;_qdsc.disabled=false;}
+  const _ctype=document.getElementById('qctype'); if(_ctype) _ctype.value='Residential';
   document.getElementById('qrun').value   = '';
   bomQty = {}; bomIncl = {};
   optIncluded = {}; customOptionals = []; customIncl = {};
@@ -2045,10 +2041,14 @@ function exportWord(id) {
   const q = quotes.find(x => x.id === id);
   if (!q) return;
 
-  /* If server is running, generate proper .docx via Node.js */
-  if (dbOnline) {
+  /* Try Vercel serverless function first, fall back to HTML-in-Word */
+  const endpoint = VERCEL_URL
+    ? VERCEL_URL.replace(/\/+$/, '') + '/api/export-word'
+    : null;
+
+  if (endpoint) {
     setDbStatus('syncing', 'Generating Word doc…');
-    fetch(SERVER + '/export-word', {
+    fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(q)
@@ -2061,19 +2061,19 @@ function exportWord(id) {
       const url = URL.createObjectURL(blob);
       const a   = document.createElement('a');
       a.href     = url;
-      a.download = `Quotation_${q.id}_${q.customer.replace(/\s+/g,'_')}.docx`;
+      a.download = `Quotation_${q.id}_${(q.customer||'Customer').replace(/\s+/g,'_')}.docx`;
       document.body.appendChild(a); a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setDbStatus('online', 'Connected — EV_Database.json');
-      showToast(`Quotation ${q.id} exported as Word (.docx)`);
+      setDbStatus('online', 'Supabase — live');
+      showToast('Quotation ' + q.id + ' exported as Word (.docx)');
     })
     .catch(e => {
-      setDbStatus('offline', 'Export failed: ' + e.message);
+      console.warn('Vercel export failed, using fallback:', e.message);
       exportWordFallback(q);
     });
   } else {
-    /* Fallback: HTML-in-Word blob when server is offline */
+    /* No Vercel URL configured — use HTML-in-Word fallback */
     exportWordFallback(q);
   }
 }
@@ -2335,7 +2335,7 @@ function quoteRow(q) {
     run:q.run||0, qty:q.qty||1,
     sec_a:q.secA||q.base||0, sec_b:q.secB||q.cableX||0, sec_c:q.secC||q.aoTotal||0,
     sub_total:q.sub||0, gst:q.gst||0, total:q.total||0,
-    status:q.status, prepared_by:q.by||q.prepared_by||'', quote_date:q.date||q.quote_date||'',
+    customer_type:q.customerType||'', status:q.status, prepared_by:q.by||q.prepared_by||'', quote_date:q.date||q.quote_date||'',
     bom_snapshot:q.bomSnapshot||[], cable_snapshot:q.cableSnapshot||[],
     optionals_snapshot:q.optionalsSnapshot||[], addons:q.addons||[], history:q.history||[]
   };
