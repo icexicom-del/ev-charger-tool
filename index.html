@@ -275,6 +275,8 @@
   body[data-role="sales"] #sec-pricing,
   body[data-role="sales"] #sec-chargers,
   body[data-role="sales"] #sec-team,
+  body[data-role="sales"] #sec-accounts,
+  body[data-role="sales"] #sec-payment,
   body[data-role="sales"] #sec-approvals,
   body[data-role="sales"] #sec-allq,
   body[data-role="sales"] #sec-dashboard,
@@ -391,11 +393,14 @@
     <button class="nav-item" onclick="nav('pricing')" id="n-pricing"><i class="ti ti-tag"></i>Pricing manager</button>
     <button class="nav-item" onclick="nav('chargers')" id="n-chargers"><i class="ti ti-bolt"></i>Charger models</button>
     <button class="nav-item" onclick="nav('team')" id="n-team"><i class="ti ti-users"></i>Team</button>
+    <button class="nav-item" onclick="nav('accounts')" id="n-accounts"><i class="ti ti-building"></i>Accounts &amp; pricing</button>
+    <button class="nav-item" onclick="nav('payment')" id="n-payment"><i class="ti ti-credit-card"></i>Payment accounts</button>
   </div>
   <div class="nav" id="tnav" style="display:none">
     <div class="nav-section">Sales</div>
     <button class="nav-item" onclick="nav('newq')" id="n-newq"><i class="ti ti-plus"></i>New quote</button>
     <button class="nav-item" onclick="nav('myq')" id="n-myq"><i class="ti ti-file-text"></i>My quotes<span class="nbadge nb-info" id="myq-badge">0</span></button>
+    <button class="nav-item" onclick="nav('extrawork')" id="n-extrawork"><i class="ti ti-tools"></i>Extra work</button>
   </div>
   <div class="role-pill" id="rpill">
     <i class="ti ti-user" id="rpill-icon"></i>
@@ -807,6 +812,180 @@
       </div>
     </div>
 
+
+  <!-- ═══ ACCOUNTS & PRICING ═══ -->
+  <div class="sec" id="sec-accounts" data-admin-only="true">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Accounts &amp; pricing</div>
+          <div class="card-sub">Set account-wise rates for extra work items. Each account can have custom pricing.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <select id="acct-select" onchange="renderAccountPricing()" style="padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)">
+            <option value="">— Select account —</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="openAddAccount()"><i class="ti ti-building-plus"></i>Add account</button>
+          <button class="btn btn-success btn-sm" onclick="saveAccountPricing()"><i class="ti ti-device-floppy"></i>Save rates</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account list -->
+    <div class="card" style="margin-bottom:12px" id="acct-list-card">
+      <div class="card-title" style="margin-bottom:10px">All accounts</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px" id="acct-chips"></div>
+    </div>
+
+    <!-- Pricing table for selected account -->
+    <div class="card" id="acct-pricing-card" style="display:none">
+      <div class="card-header">
+        <div>
+          <div class="card-title" id="acct-pricing-title">Account pricing</div>
+          <div class="card-sub">Set custom rates for extra work items under this account. Leave 0 to use default.</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteSelectedAccount()"><i class="ti ti-trash"></i>Delete account</button>
+      </div>
+      <div class="tbl-wrap" style="margin-top:12px">
+        <table><thead><tr>
+          <th style="width:40%">Work item</th>
+          <th style="width:12%">Unit</th>
+          <th style="width:20%;background:#ebf8ff;color:#1a4a7a">Rate (₹)</th>
+          <th style="width:28%">Description / note</th>
+        </tr></thead>
+        <tbody id="acct-pricing-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PAYMENT ACCOUNTS ═══ -->
+  <div class="sec" id="sec-payment" data-admin-only="true">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Payment accounts</div>
+          <div class="card-sub">Bank details shown on quotations. Customer selects from this list at the time of payment.</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddPayment()"><i class="ti ti-plus"></i>Add account</button>
+      </div>
+      <div class="tbl-wrap" style="margin-top:12px">
+        <table><thead><tr>
+          <th style="width:18%">Bank</th>
+          <th style="width:20%">Account name</th>
+          <th style="width:18%">Account no.</th>
+          <th style="width:13%">IFSC</th>
+          <th style="width:16%">UPI / QR</th>
+          <th style="width:15%">Actions</th>
+        </tr></thead>
+        <tbody id="payment-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ EXTRA WORK QUOTE ═══ -->
+  <div class="sec" id="sec-extrawork">
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start">
+
+      <!-- LEFT: Form -->
+      <div>
+        <!-- Customer details -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header"><div class="card-title"><i class="ti ti-user" style="color:var(--blue)"></i> Customer details</div></div>
+          <div class="two-col" style="margin-bottom:10px">
+            <div class="form-group"><label>Customer name <span class="required">*</span></label><input id="ew-cname" placeholder="Full name"></div>
+            <div class="form-group"><label>Mobile number <span class="required">*</span></label><input id="ew-mobile" placeholder="+91 98XXXXXXXX" type="tel"></div>
+          </div>
+          <div class="two-col" style="margin-bottom:10px">
+            <div class="form-group"><label>Address / site location</label><input id="ew-addr" placeholder="Site address"></div>
+            <div class="form-group"><label>Booking ID / reference</label><input id="ew-booking" placeholder="e.g. BK-2024-00123"></div>
+          </div>
+          <div class="two-col">
+            <div class="form-group"><label>Vehicle / charger model</label><input id="ew-vehicle" placeholder="e.g. Tata Nexon EV, Exicom 7.5kW"></div>
+            <div class="form-group"><label>Visit date</label><input id="ew-date" type="date"></div>
+          </div>
+        </div>
+
+        <!-- Account selection -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header"><div class="card-title"><i class="ti ti-building" style="color:var(--blue)"></i> Account &amp; work scope</div></div>
+          <div class="two-col" style="margin-bottom:10px">
+            <div class="form-group">
+              <label>Account <span class="required">*</span></label>
+              <select id="ew-account" onchange="loadEWItems()">
+                <option value="">— Select account —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Payment account <span class="required">*</span></label>
+              <select id="ew-payment">
+                <option value="">— Select payment account —</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Work description / notes</label>
+            <textarea id="ew-notes" rows="2" placeholder="Describe the extra work required at the customer site…" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:inherit;resize:vertical;background:var(--surface);color:var(--text)"></textarea>
+          </div>
+        </div>
+
+        <!-- Work items -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-tools" style="color:var(--amber)"></i> Work items</div>
+            <button class="btn btn-sm btn-primary" onclick="addEWItem()"><i class="ti ti-plus"></i>Add item</button>
+          </div>
+          <div class="tbl-wrap" style="margin-top:10px">
+            <table><thead><tr>
+              <th style="width:38%">Work item</th>
+              <th style="width:12%">Unit</th>
+              <th style="width:10%">Qty</th>
+              <th style="width:18%">Rate (₹)</th>
+              <th style="width:15%">Amount</th>
+              <th style="width:7%"></th>
+            </tr></thead>
+            <tbody id="ew-items-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Summary + actions -->
+      <div style="position:sticky;top:16px">
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title" style="margin-bottom:12px">Quotation summary</div>
+
+          <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:2px">Account</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text)" id="ew-sum-account">—</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:8px;margin-bottom:2px">Customer</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text)" id="ew-sum-customer">—</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:8px;margin-bottom:2px">Booking ref.</div>
+            <div style="font-size:13px;color:var(--text2)" id="ew-sum-booking">—</div>
+          </div>
+
+          <!-- Amount breakdown -->
+          <div class="q-line"><span>Sub total (excl. GST)</span><span id="ew-sub">₹0</span></div>
+          <div class="q-line"><span>GST @ 18%</span><span id="ew-gst">₹0</span></div>
+          <div class="q-line" style="font-weight:700;font-size:15px;color:var(--blue);border-top:2px solid var(--border);padding-top:8px;margin-top:4px">
+            <span>Grand total</span><span id="ew-total">₹0</span>
+          </div>
+        </div>
+
+        <!-- Payment account preview -->
+        <div class="card" style="margin-bottom:12px" id="ew-payment-preview" style="display:none">
+          <div class="card-title" style="margin-bottom:8px;font-size:12px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.05em">Payment details</div>
+          <div id="ew-payment-details" style="font-size:12px;color:var(--text2);line-height:1.7"></div>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;margin-bottom:8px" onclick="submitEWQuote()">
+          <i class="ti ti-file-invoice"></i>Generate quotation
+        </button>
+        <button class="btn" style="width:100%" onclick="resetEWForm()">
+          <i class="ti ti-refresh"></i>Reset form
+        </button>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -966,6 +1145,55 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-cable')">Cancel</button>
       <button class="btn btn-success" onclick="saveCable()"><i class="ti ti-check"></i>Save cable type</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ADD ACCOUNT MODAL -->
+<div class="modal-overlay" id="modal-account">
+  <div class="modal" style="width:400px">
+    <div class="modal-title"><i class="ti ti-building-plus"></i>Add / edit account</div>
+    <input type="hidden" id="acct-edit-id">
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Account name <span class="required">*</span></label>
+      <input id="acct-name" placeholder="e.g. Mahindra, Hyundai, Maruti">
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Short code (3 letters)</label>
+      <input id="acct-code" placeholder="e.g. MHD" maxlength="5" style="text-transform:uppercase">
+    </div>
+    <div class="form-group" style="margin-bottom:4px">
+      <label>Notes / contract ref.</label>
+      <input id="acct-notes" placeholder="Optional contract or agreement reference">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-account')">Cancel</button>
+      <button class="btn btn-success" onclick="saveAccount()"><i class="ti ti-check"></i>Save account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PAYMENT ACCOUNT MODAL -->
+<div class="modal-overlay" id="modal-payment">
+  <div class="modal" style="width:460px">
+    <div class="modal-title"><i class="ti ti-credit-card"></i>Add / edit payment account</div>
+    <input type="hidden" id="pa-edit-id">
+    <div class="two-col" style="margin-bottom:10px">
+      <div class="form-group"><label>Bank name <span class="required">*</span></label><input id="pa-bank" placeholder="e.g. HDFC Bank"></div>
+      <div class="form-group"><label>Account name <span class="required">*</span></label><input id="pa-name" placeholder="Exicom Tele-Systems Ltd"></div>
+    </div>
+    <div class="two-col" style="margin-bottom:10px">
+      <div class="form-group"><label>Account number <span class="required">*</span></label><input id="pa-acct" placeholder="XXXXXXXXXXXX"></div>
+      <div class="form-group"><label>IFSC code <span class="required">*</span></label><input id="pa-ifsc" placeholder="HDFC0001234"></div>
+    </div>
+    <div class="two-col" style="margin-bottom:4px">
+      <div class="form-group"><label>UPI ID</label><input id="pa-upi" placeholder="name@bank"></div>
+      <div class="form-group"><label>Branch</label><input id="pa-branch" placeholder="e.g. Gurugram, Haryana"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-payment')">Cancel</button>
+      <button class="btn btn-success" onclick="savePaymentAccount()"><i class="ti ti-check"></i>Save account</button>
     </div>
   </div>
 </div>
@@ -1896,7 +2124,8 @@ function submitQ(status) {
   bomQty = {}; bomIncl = {};
   optIncluded = {}; customOptionals = []; customIncl = {};
   calcQ();
-  updateBadges(); renderDashboard(); renderAllQ(); renderMyQuotes();
+  updateBadges(); renderDashboard();
+  populateAccountDropdowns(); populatePaymentDropdown(); renderAllQ(); renderMyQuotes();
   showToast(status === 'Pending review' ? `${id} submitted for approval` : `Draft ${id} saved`);
   nav('myq');
 }
@@ -1936,7 +2165,8 @@ function confirmApprove() {
   q.status = 'Approved';
   q.history.push({status:'Approved', by:'Super Admin', date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note});
   closeModal('modal-approve');
-  updateBadges(); renderDashboard(); renderApprovals(); renderAllQ(); renderMyQuotes();
+  updateBadges(); renderDashboard();
+  populateAccountDropdowns(); populatePaymentDropdown(); renderApprovals(); renderAllQ(); renderMyQuotes();
   showToast(`${activeQId} approved — sales team notified`);
 }
 
@@ -1948,7 +2178,8 @@ function confirmReject() {
   q.status = 'Revision needed';
   q.history.push({status:'Revision needed', by:'Super Admin', date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note: reason});
   closeModal('modal-reject');
-  updateBadges(); renderDashboard(); renderApprovals(); renderAllQ(); renderMyQuotes();
+  updateBadges(); renderDashboard();
+  populateAccountDropdowns(); populatePaymentDropdown(); renderApprovals(); renderAllQ(); renderMyQuotes();
   showToast(`Revision requested for ${activeQId}`);
 }
 
@@ -2323,13 +2554,470 @@ async function deleteQuote(id) {
     }
     quotes = quotes.filter(x => x.id !== id);
     saveLocal();
-    updateBadges(); renderDashboard(); renderAllQ(); renderMyQuotes();
+    updateBadges(); renderDashboard();
+  populateAccountDropdowns(); populatePaymentDropdown(); renderAllQ(); renderMyQuotes();
     try { renderApprovals(); } catch(e) {}
     showToast('Quote ' + id + ' deleted');
   } catch(e) {
     showToast('Delete failed: ' + e.message, 'error');
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   EXTRA WORK MODULE — Accounts, Payment accounts, EW Quotes
+════════════════════════════════════════════════════════════════ */
+
+const F = v => '₹' + Math.round(v||0).toLocaleString('en-IN');
+let ewItems = [];   /* current extra work quote line items */
+let ewEditId = null;
+
+/* ── Populate dropdowns ───────────────────────────────────────── */
+function populateAccountDropdowns() {
+  const ewSel = document.getElementById('ew-account');
+  const acSel = document.getElementById('acct-select');
+  [ewSel, acSel].forEach(sel => {
+    if (!sel) return;
+    const val = sel.value;
+    sel.innerHTML = '<option value="">— Select account —</option>' +
+      accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    if (val) sel.value = val;
+  });
+}
+
+function populatePaymentDropdown() {
+  const sel = document.getElementById('ew-payment');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Select payment account —</option>' +
+    paymentAccounts.map(p => `<option value="${p.id}">${p.bank} — ${p.name}</option>`).join('');
+}
+
+function renderPaymentAccounts() {
+  populatePaymentDropdown();
+  const tbody = document.getElementById('payment-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = paymentAccounts.length ? paymentAccounts.map((p,i) => `
+    <tr>
+      <td style="font-weight:600">${p.bank}</td>
+      <td>${p.name}</td>
+      <td style="font-family:var(--mono,monospace);font-size:12px">${p.account}</td>
+      <td style="font-family:var(--mono,monospace);font-size:12px">${p.ifsc}</td>
+      <td style="font-size:12px;color:var(--text2)">${p.upi||'—'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="editPayment(${i})"><i class="ti ti-edit"></i>Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deletePayment(${i})"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`).join('') :
+    '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">No payment accounts yet — click Add account</td></tr>';
+}
+
+/* ── Account chips ─────────────────────────────────────────────── */
+function renderAccountChips() {
+  const el = document.getElementById('acct-chips');
+  if (!el) return;
+  el.innerHTML = accounts.map(a => `
+    <div onclick="selectAccount('${a.id}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+      padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);
+      font-size:12px;font-weight:600;color:var(--text);transition:all .15s"
+      id="chip-${a.id}"
+      onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+      onmouseout="const s=document.getElementById('acct-select');if(s&&s.value!=='${a.id}'){this.style.borderColor='var(--border)';this.style.color='var(--text)';}">
+      <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:#ebf4ff;color:#1a4a7a">${a.code}</span>
+      ${a.name}
+    </div>`).join('') +
+    `<div onclick="openAddAccount()" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+      padding:6px 14px;border-radius:20px;border:1.5px dashed var(--border);font-size:12px;color:var(--text3)">
+      <i class="ti ti-plus" style="font-size:13px"></i>Add account
+    </div>`;
+}
+
+function selectAccount(id) {
+  const sel = document.getElementById('acct-select');
+  if (sel) { sel.value = id; renderAccountPricing(); }
+}
+
+function renderAccountPricing() {
+  const accId = document.getElementById('acct-select')?.value;
+  const card  = document.getElementById('acct-pricing-card');
+  const title = document.getElementById('acct-pricing-title');
+  if (!accId) { if (card) card.style.display = 'none'; return; }
+  const acc = accounts.find(a => a.id === accId);
+  if (!acc) return;
+  if (card) card.style.display = 'block';
+  if (title) title.textContent = acc.name + ' — Work item pricing';
+
+  /* Highlight active chip */
+  accounts.forEach(a => {
+    const chip = document.getElementById('chip-'+a.id);
+    if (chip) {
+      chip.style.borderColor = a.id === accId ? 'var(--blue)' : 'var(--border)';
+      chip.style.color       = a.id === accId ? 'var(--blue)' : 'var(--text)';
+      chip.style.background  = a.id === accId ? '#ebf4ff'     : 'var(--surface)';
+    }
+  });
+
+  const prices = accountPricing[accId] || {};
+  const tbody  = document.getElementById('acct-pricing-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = extraWorkItems.map((item,i) => {
+    const rate = prices[item.id] !== undefined ? prices[item.id] : item.rate;
+    return `<tr style="background:${i%2===0?'#f8f9fa':'#fff'}">
+      <td style="font-weight:500">${item.name}</td>
+      <td style="color:var(--text2)">${item.unit}</td>
+      <td>
+        <input type="number" value="${rate}" min="0"
+          style="width:100px;padding:6px 8px;border:1.5px solid #bee3f8;border-radius:6px;font-size:13px;font-weight:600;background:#ebf8ff;color:#1a4a7a"
+          onchange="if(!accountPricing['${accId}'])accountPricing['${accId}']={};accountPricing['${accId}']['${item.id}']=+this.value" 
+          placeholder="0">
+      </td>
+      <td>
+        <input type="text" placeholder="Optional note for this account"
+          style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text)">
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveAccountPricing() {
+  showToast('Account pricing saved');
+  saveLocal();
+}
+
+/* ── Account CRUD ──────────────────────────────────────────────── */
+function openAddAccount() {
+  document.getElementById('acct-edit-id').value = '';
+  document.getElementById('acct-name').value = '';
+  document.getElementById('acct-code').value = '';
+  document.getElementById('acct-notes').value = '';
+  document.getElementById('modal-account').classList.add('open');
+}
+function editAccount(id) {
+  const a = accounts.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('acct-edit-id').value = id;
+  document.getElementById('acct-name').value    = a.name;
+  document.getElementById('acct-code').value    = a.code;
+  document.getElementById('acct-notes').value   = a.notes || '';
+  document.getElementById('modal-account').classList.add('open');
+}
+function saveAccount() {
+  const name  = document.getElementById('acct-name').value.trim();
+  const code  = document.getElementById('acct-code').value.trim().toUpperCase() || name.substring(0,3).toUpperCase();
+  const notes = document.getElementById('acct-notes').value.trim();
+  const editId = document.getElementById('acct-edit-id').value;
+  if (!name) { showToast('Please enter account name','error'); return; }
+  if (editId) {
+    const idx = accounts.findIndex(a => a.id === editId);
+    if (idx >= 0) accounts[idx] = { ...accounts[idx], name, code, notes };
+    showToast(name + ' updated');
+  } else {
+    accounts.push({ id:'acc_'+Date.now(), name, code, notes });
+    showToast(name + ' added');
+  }
+  closeModal('modal-account');
+  populateAccountDropdowns();
+  renderAccountChips();
+}
+function deleteSelectedAccount() {
+  const id = document.getElementById('acct-select')?.value;
+  if (!id) return;
+  const acc = accounts.find(a => a.id === id);
+  if (!confirm('Delete account "' + (acc?.name||id) + '"? This cannot be undone.')) return;
+  accounts = accounts.filter(a => a.id !== id);
+  delete accountPricing[id];
+  document.getElementById('acct-select').value = '';
+  renderAccountChips();
+  renderAccountPricing();
+  showToast('Account deleted');
+}
+
+/* ── Payment account CRUD ─────────────────────────────────────── */
+function openAddPayment() {
+  ['pa-edit-id','pa-bank','pa-name','pa-acct','pa-ifsc','pa-upi','pa-branch'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('modal-payment').classList.add('open');
+}
+function editPayment(i) {
+  const p = paymentAccounts[i];
+  if (!p) return;
+  document.getElementById('pa-edit-id').value = p.id;
+  document.getElementById('pa-bank').value    = p.bank   || '';
+  document.getElementById('pa-name').value    = p.name   || '';
+  document.getElementById('pa-acct').value    = p.account|| '';
+  document.getElementById('pa-ifsc').value    = p.ifsc   || '';
+  document.getElementById('pa-upi').value     = p.upi    || '';
+  document.getElementById('pa-branch').value  = p.branch || '';
+  document.getElementById('modal-payment').classList.add('open');
+}
+function savePaymentAccount() {
+  const bank   = document.getElementById('pa-bank').value.trim();
+  const name   = document.getElementById('pa-name').value.trim();
+  const acct   = document.getElementById('pa-acct').value.trim();
+  const ifsc   = document.getElementById('pa-ifsc').value.trim();
+  const upi    = document.getElementById('pa-upi').value.trim();
+  const branch = document.getElementById('pa-branch').value.trim();
+  const editId = document.getElementById('pa-edit-id').value;
+  if (!bank||!name||!acct||!ifsc) { showToast('Bank, name, account no. and IFSC are required','error'); return; }
+  const row = { id: editId||'pa_'+Date.now(), bank, name, account:acct, ifsc, upi, branch };
+  if (editId) {
+    const idx = paymentAccounts.findIndex(p => p.id === editId);
+    if (idx >= 0) paymentAccounts[idx] = row; else paymentAccounts.push(row);
+  } else {
+    paymentAccounts.push(row);
+  }
+  closeModal('modal-payment');
+  renderPaymentAccounts();
+  showToast(bank + ' account saved');
+}
+function deletePayment(i) {
+  if (!confirm('Delete this payment account?')) return;
+  paymentAccounts.splice(i, 1);
+  renderPaymentAccounts();
+  showToast('Payment account deleted');
+}
+
+/* ── Extra Work Quote Builder ─────────────────────────────────── */
+let ewLineItems = [];
+
+function loadEWItems() {
+  const accId = document.getElementById('ew-account')?.value;
+  const acc   = accounts.find(a => a.id === accId);
+  document.getElementById('ew-sum-account').textContent = acc ? acc.name : '—';
+  if (!ewLineItems.length && accId) {
+    /* Pre-populate with account pricing */
+    const prices = accountPricing[accId] || {};
+    ewLineItems = extraWorkItems.map(item => ({
+      ...item, qty: 1,
+      rate: prices[item.id] !== undefined ? prices[item.id] : item.rate,
+      include: false
+    }));
+    renderEWItems();
+  }
+  updateEWSummary();
+}
+
+function renderEWItems() {
+  const tbody = document.getElementById('ew-items-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = ewLineItems.map((item,i) => `
+    <tr style="background:${i%2===0?'#f8f9fa':'#fff'}">
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" ${item.include?'checked':''} onchange="ewLineItems[${i}].include=this.checked;updateEWSummary()"
+            style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">
+          <input value="${item.name}" onchange="ewLineItems[${i}].name=this.value"
+            style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--surface);color:var(--text)">
+        </div>
+      </td>
+      <td>
+        <select onchange="ewLineItems[${i}].unit=this.value" style="padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--surface);color:var(--text)">
+          ${['Visit','Unit','Set','Metre','Trip','LS','Hour'].map(u => `<option ${item.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <input type="number" value="${item.qty}" min="1"
+          style="width:60px;padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-weight:600;text-align:center;background:var(--surface);color:var(--text)"
+          onchange="ewLineItems[${i}].qty=+this.value||1;updateEWSummary()">
+      </td>
+      <td>
+        <input type="number" value="${item.rate}" min="0"
+          style="width:90px;padding:5px 7px;border:1.5px solid #bee3f8;border-radius:5px;font-size:13px;font-weight:600;background:#ebf8ff;color:#1a4a7a"
+          onchange="ewLineItems[${i}].rate=+this.value;updateEWSummary()">
+      </td>
+      <td style="font-weight:600;color:var(--text)">
+        ${item.include ? F((item.qty||1)*(item.rate||0)) : '<span style="color:var(--text3);font-size:11px">not included</span>'}
+      </td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="ewLineItems.splice(${i},1);renderEWItems();updateEWSummary()">
+          <i class="ti ti-trash"></i>
+        </button>
+      </td>
+    </tr>`).join('') +
+    '<tr><td colspan="6" style="padding:6px 0"><button class="btn btn-sm" style="width:100%;border-style:dashed" onclick="addEWItem()"><i class="ti ti-plus"></i> Add custom item</button></td></tr>';
+}
+
+function addEWItem() {
+  ewLineItems.push({ id:'ew_c_'+Date.now(), name:'Custom work item', unit:'Visit', qty:1, rate:0, include:true });
+  renderEWItems();
+}
+
+function updateEWSummary() {
+  const included = ewLineItems.filter(i => i.include);
+  const sub   = included.reduce((s,i) => s + (i.qty||1)*(i.rate||0), 0);
+  const gst   = Math.round(sub * 0.18);
+  const total = sub + gst;
+  document.getElementById('ew-sub').textContent   = F(sub);
+  document.getElementById('ew-gst').textContent   = F(gst);
+  document.getElementById('ew-total').textContent  = F(total);
+  /* Update customer/booking summary */
+  const cname = document.getElementById('ew-cname')?.value;
+  const booking = document.getElementById('ew-booking')?.value;
+  document.getElementById('ew-sum-customer').textContent = cname || '—';
+  document.getElementById('ew-sum-booking').textContent  = booking || '—';
+  /* Show payment preview */
+  const paId = document.getElementById('ew-payment')?.value;
+  const pa   = paymentAccounts.find(p => p.id === paId);
+  const prev = document.getElementById('ew-payment-preview');
+  const det  = document.getElementById('ew-payment-details');
+  if (pa && prev && det) {
+    prev.style.display = 'block';
+    det.innerHTML = `<b>${pa.bank}</b><br>Account: ${pa.account}<br>IFSC: ${pa.ifsc}<br>Name: ${pa.name}${pa.upi?'<br>UPI: '+pa.upi:''}${pa.branch?'<br>Branch: '+pa.branch:''}`;
+  } else if (prev) { prev.style.display = 'none'; }
+}
+
+function submitEWQuote() {
+  const cname   = document.getElementById('ew-cname')?.value.trim();
+  const mobile  = document.getElementById('ew-mobile')?.value.trim();
+  const accId   = document.getElementById('ew-account')?.value;
+  const paId    = document.getElementById('ew-payment')?.value;
+  if (!cname)  { showToast('Please enter customer name','error');  return; }
+  if (!mobile) { showToast('Please enter mobile number','error');  return; }
+  if (!accId)  { showToast('Please select an account','error');    return; }
+  if (!paId)   { showToast('Please select a payment account','error'); return; }
+  const included = ewLineItems.filter(i => i.include);
+  if (!included.length) { showToast('Please select at least one work item','error'); return; }
+
+  const acc = accounts.find(a => a.id === accId);
+  const pa  = paymentAccounts.find(p => p.id === paId);
+  const sub = included.reduce((s,i) => s + (i.qty||1)*(i.rate||0), 0);
+  const gst = Math.round(sub * 0.18);
+  const q = {
+    id: 'EW-' + Date.now(),
+    type: 'extrawork',
+    account: acc?.name || accId,
+    paymentAccount: pa ? `${pa.bank} — ${pa.account}` : '',
+    paymentDetails: pa,
+    customer: cname,
+    mobile:   mobile,
+    addr:     document.getElementById('ew-addr')?.value.trim()    || '',
+    booking:  document.getElementById('ew-booking')?.value.trim() || '',
+    vehicle:  document.getElementById('ew-vehicle')?.value.trim() || '',
+    visitDate:document.getElementById('ew-date')?.value           || '',
+    notes:    document.getElementById('ew-notes')?.value.trim()   || '',
+    items:    included,
+    sub, gst, total: sub+gst,
+    by:   _currentUserName || (currentUser?.name || 'Sales'),
+    date: new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    status: 'Draft'
+  };
+
+  extraWorkQuotes.unshift(q);
+  showToast('Extra work quotation ' + q.id + ' created');
+  exportEWQuote(q);
+  resetEWForm();
+}
+
+function resetEWForm() {
+  ['ew-cname','ew-mobile','ew-addr','ew-booking','ew-vehicle','ew-notes'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  const dt = document.getElementById('ew-date'); if(dt) dt.value = '';
+  const acc = document.getElementById('ew-account'); if(acc) acc.value = '';
+  const pa  = document.getElementById('ew-payment'); if(pa)  pa.value  = '';
+  ewLineItems = [];
+  renderEWItems();
+  updateEWSummary();
+}
+
+function exportEWQuote(q) {
+  const F2 = v => '₹' + Math.round(v||0).toLocaleString('en-IN');
+  const itemRows = q.items.map((item,i) => `
+    <tr style="background:${i%2===0?'#F7FAFC':'#fff'}">
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:center;color:#718096;font-size:9pt">${i+1}</td>
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;font-size:9.5pt">${item.name}</td>
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:center;font-size:9pt">${item.unit}</td>
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:center;font-size:9pt">${item.qty}</td>
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:right;font-size:9pt">${F2(item.rate)}</td>
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:center;font-size:9pt">18%</td>
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:right;font-weight:bold;font-size:9pt">${F2((item.qty||1)*(item.rate||0))}</td>
+    </tr>`).join('');
+
+  const pa = q.paymentDetails;
+  const payBlock = pa ? `
+    <table style="width:100%;margin-top:18pt;border:1px solid #9AE6B4;border-radius:6px">
+      <tr><td style="background:#F0FFF4;padding:8pt 10pt;font-size:9pt;border:none">
+        <b style="color:#276749">Payment details</b><br>
+        Bank: ${pa.bank} &nbsp;|&nbsp; Account: ${pa.account} &nbsp;|&nbsp; IFSC: ${pa.ifsc}<br>
+        Name: ${pa.name}${pa.upi ? ' &nbsp;|&nbsp; UPI: '+pa.upi : ''}${pa.branch ? '<br>Branch: '+pa.branch : ''}
+      </td></tr>
+    </table>` : '';
+
+  const docHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<style>
+  body { font-family: Calibri, Arial, sans-serif; margin: 2cm; font-size: 11pt; color: #1A202C; }
+  table { border-collapse: collapse; width: 100%; }
+  h1 { font-size: 18pt; color: #1A3A5C; margin: 0; }
+  .sub { font-size: 9pt; color: #4A5568; }
+</style>
+</head><body>
+<table style="border:none;border-bottom:3px solid #2E6DB4;margin-bottom:14pt"><tr>
+  <td style="border:none;padding:8pt 0;vertical-align:middle">
+    <h1>Extra Work Quotation</h1>
+    <div class="sub">Account: <b>${q.account}</b> &nbsp;|&nbsp; Ref: ${q.id}</div>
+  </td>
+  <td style="border:none;text-align:right;vertical-align:middle">
+    <div style="font-size:10pt;color:#4A5568">Date: ${q.date}</div>
+    <div style="font-size:10pt;color:#4A5568">Prepared by: ${q.by}</div>
+  </td>
+</tr></table>
+
+<table style="width:100%;border:none;margin-bottom:14pt"><tr>
+  <td style="border:none;width:50%;vertical-align:top;padding:0 8pt 0 0">
+    <div style="font-size:8pt;color:#718096;margin-bottom:2pt">CUSTOMER</div>
+    <div style="font-size:12pt;font-weight:bold">${q.customer}</div>
+    <div style="font-size:10pt">${q.mobile}</div>
+    ${q.addr ? `<div style="font-size:9pt;color:#4A5568">${q.addr}</div>` : ''}
+  </td>
+  <td style="border:none;width:50%;vertical-align:top;padding-left:8pt">
+    <div style="font-size:8pt;color:#718096;margin-bottom:2pt">BOOKING DETAILS</div>
+    ${q.booking  ? `<div style="font-size:10pt"><b>Booking ID:</b> ${q.booking}</div>` : ''}
+    ${q.vehicle  ? `<div style="font-size:10pt"><b>Vehicle/Model:</b> ${q.vehicle}</div>` : ''}
+    ${q.visitDate? `<div style="font-size:10pt"><b>Visit date:</b> ${q.visitDate}</div>` : ''}
+  </td>
+</tr></table>
+
+${q.notes ? `<p style="background:#FFFBEB;border:1px solid #FBD38D;padding:6pt 10pt;font-size:9.5pt;border-radius:4px;margin-bottom:10pt"><b>Work notes:</b> ${q.notes}</p>` : ''}
+
+<h2 style="font-size:12pt;color:#1A3A5C;border-bottom:2px solid #1A3A5C;padding-bottom:4pt;margin-bottom:0">Work Scope &amp; Commercials</h2>
+<table style="width:100%;margin-bottom:0">
+  <thead><tr style="background:#1A3A5C">
+    <th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:5%">S.No</th>
+    <th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:left;font-size:9pt;width:42%">Work Item</th>
+    <th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:9%">Unit</th>
+    <th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:8%">Qty</th>
+    <th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:right;font-size:9pt;width:16%">Rate</th>
+    <th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:center;font-size:9pt;width:8%">Tax</th>
+    <th style="border:1px solid #1A3A5C;padding:5pt 7pt;color:#fff;text-align:right;font-size:9pt;width:12%">Amount</th>
+  </thead>
+  <tbody>${itemRows}</tbody>
+  <tr><td colspan="6" style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:right;font-weight:bold;color:#1A3A5C">Sub Total (excl. GST)</td>
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:right;font-weight:bold">${F2(q.sub)}</td></tr>
+  <tr style="background:#EBF8FF"><td colspan="6" style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:right;color:#4A5568">GST @ 18%</td>
+      <td style="border:1px solid #CBD5E0;padding:5pt 7pt;text-align:right;color:#4A5568">${F2(q.gst)}</td></tr>
+  <tr style="background:#1A3A5C"><td colspan="6" style="border:1px solid #1A3A5C;padding:5pt 7pt;text-align:right;font-weight:bold;font-size:11pt;color:#fff">GRAND TOTAL (incl. GST)</td>
+      <td style="border:1px solid #1A3A5C;padding:5pt 7pt;text-align:right;font-weight:bold;font-size:11pt;color:#fff">${F2(q.total)}</td></tr>
+</table>
+${payBlock}
+<p style="margin-top:24pt;font-size:8pt;color:#718096;text-align:center;border-top:1px solid #CBD5E0;padding-top:6pt">
+  Quote ${q.id} &nbsp;|&nbsp; Generated ${q.date} &nbsp;|&nbsp; ${q.by}
+</p>
+</body></html>`;
+
+  const blob = new Blob(['\ufeff', docHTML], { type: 'application/msword' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `EW_Quote_${q.id}_${q.customer.replace(/\s+/g,'_')}.doc`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Extra work quotation downloaded');
+}
+
+/* ── nav() handler for new sections ──────────────────────────── */
 function savePricing() { populateCableDropdown(); populateChargerDropdown(); renderChargerModels(); showToast('Prices saved — active on all new quotes'); }
 function resetPrices() { prices = JSON.parse(JSON.stringify(defaultPrices)); cables = JSON.parse(JSON.stringify(defaultCables)); renderPricing(); showToast('Prices reset to defaults'); }
 
@@ -2345,7 +3033,7 @@ const navMeta = {
 };
 
 function nav(id) {
-  if (role !== 'admin' && ['pricing','chargers','team','allq','approvals','dashboard'].includes(id)) id = 'newq';
+  if (role !== 'admin' && ['pricing','chargers','team','allq','approvals','dashboard','accounts','payment'].includes(id)) id = 'newq';
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
@@ -2357,7 +3045,10 @@ function nav(id) {
   if (m.id) document.getElementById(m.id)?.classList.add('active');
   if (id === 'pricing')  renderPricing();
   if (id === 'chargers') { renderChargerModels(); populateChargerCableSelect(''); }
-  if (id === 'team')     renderTeam();
+  if (id === 'team')       renderTeam();
+  if (id === 'accounts')   { renderAccountChips(); populateAccountDropdowns(); renderAccountPricing(); }
+  if (id === 'payment')    renderPaymentAccounts();
+  if (id === 'extrawork')  { populateAccountDropdowns(); populatePaymentDropdown(); if(!ewLineItems.length) resetEWForm(); }
   if (id === 'allq')    renderAllQ();
   if (id === 'approvals') renderApprovals();
   if (id === 'myq')     renderMyQuotes();
@@ -2380,6 +3071,35 @@ document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('cli
    DATABASE SYNC — talks to server.js on localhost:3000
    Falls back to localStorage when server not available
 ═══════════════════════════════════════════════════ */
+
+/* ── Extra Work module ─────────────────────────────────── */
+let accounts = [
+  { id:'acc_mahindra',   name:'Mahindra',         code:'MHD' },
+  { id:'acc_hyundai',    name:'Hyundai',           code:'HYN' },
+  { id:'acc_maruti',     name:'Maruti Suzuki',     code:'MSL' },
+  { id:'acc_ecomm',      name:'E-Commerce',        code:'ECM' },
+  { id:'acc_tata',       name:'Tata Motors',       code:'TAT' },
+  { id:'acc_kia',        name:'Kia India',         code:'KIA' },
+  { id:'acc_mg',         name:'MG Motor',          code:'MGM' },
+  { id:'acc_other',      name:'Other',             code:'OTH' },
+];
+let accountPricing = {};  /* accountId → { itemId → rate } */
+let paymentAccounts = [
+  { id:'pa_1', bank:'HDFC Bank', account:'XXXX-XXXX-1234', ifsc:'HDFC0001234', name:'Exicom Tele-Systems Ltd', upi:'exicom@hdfc' },
+  { id:'pa_2', bank:'ICICI Bank', account:'XXXX-XXXX-5678', ifsc:'ICIC0005678', name:'Exicom Tele-Systems Ltd', upi:'exicom@icici' },
+];
+let extraWorkItems = [
+  { id:'ew_labour',  name:'Labour charges',           unit:'Visit', rate:0 },
+  { id:'ew_material',name:'Material (extra)',          unit:'Set',   rate:0 },
+  { id:'ew_travel',  name:'Travel / conveyance',      unit:'Trip',  rate:0 },
+  { id:'ew_cable',   name:'Additional cable laying',  unit:'Metre', rate:0 },
+  { id:'ew_mcb',     name:'MCB replacement',          unit:'Unit',  rate:0 },
+  { id:'ew_earth',   name:'Earthing rectification',   unit:'Unit',  rate:0 },
+  { id:'ew_inspect', name:'Site inspection',          unit:'Visit', rate:0 },
+  { id:'ew_other',   name:'Other work',               unit:'LS',    rate:0 },
+];
+let extraWorkQuotes = [];
+
 /* ═══════════════════════════════════════════════════
    CLOUD DATABASE — Supabase REST API
 ═══════════════════════════════════════════════════ */
@@ -2534,6 +3254,7 @@ function scheduleAutoSave() {
 function refreshAllViews() {
   populateCableDropdown(); populateChargerDropdown();
   updateBadges(); renderDashboard();
+  populateAccountDropdowns(); populatePaymentDropdown();
   const cur = document.querySelector('.sec.active')?.id.replace('sec-','');
   if (cur==='pricing')   renderPricing();
   if (cur==='chargers')  renderChargerModels();
