@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- BUILD v3.0 - logo, customer type, discount, auto-refresh -->
+<!-- BUILD v4.0 - extra work, dual quotes tab, editable items -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EV Charger Quotation Tool</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
@@ -282,6 +282,15 @@
   body[data-role="sales"] #sec-dashboard,
   body[data-role="sales"] #anav { display: none !important; }
 
+
+  /* Quote tabs */
+  .qtabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:16px; }
+  .qtab  { padding:9px 20px; font-size:13px; font-weight:600; cursor:pointer; border:none;
+           background:none; color:var(--text2); border-bottom:2px solid transparent; margin-bottom:-2px; }
+  .qtab.active { color:var(--blue); border-bottom-color:var(--blue); }
+  .qtab-pane   { display:none; }
+  .qtab-pane.active { display:block; }
+
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -465,14 +474,44 @@
 
     <!-- ═══ ALL QUOTES ═══ -->
     <div class="sec" id="sec-allq">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">All quotes</div>
-          <select onchange="renderAllQ(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)">
-            <option value="">All statuses</option><option>Draft</option><option>Pending review</option><option>Revision needed</option><option>Approved</option><option>Sent</option>
-          </select>
+      <!-- Quote type tabs -->
+      <div class="qtabs">
+        <button class="qtab active" id="allq-tab-install" onclick="switchQTab('allq','install',this)">
+          <i class="ti ti-bolt" style="font-size:13px;margin-right:4px"></i>Installation
+          <span id="allq-install-count" style="margin-left:6px;background:#ebf4ff;color:#3182ce;border-radius:10px;padding:1px 7px;font-size:10px">0</span>
+        </button>
+        <button class="qtab" id="allq-tab-ew" onclick="switchQTab('allq','ew',this)">
+          <i class="ti ti-tools" style="font-size:13px;margin-right:4px"></i>Extra work
+          <span id="allq-ew-count" style="margin-left:6px;background:#f0fff4;color:#276749;border-radius:10px;padding:1px 7px;font-size:10px">0</span>
+        </button>
+      </div>
+
+      <!-- Installation pane -->
+      <div id="allq-pane-install" class="qtab-pane active">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">All installation quotes</div>
+            <select onchange="renderAllQ(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)">
+              <option value="">All statuses</option><option>Draft</option><option>Pending review</option><option>Revision needed</option><option>Approved</option><option>Sent</option>
+            </select>
+          </div>
+          <div class="tbl-wrap"><table><thead><tr><th>Quote #</th><th>Customer</th><th>Address</th><th>Type</th><th>Model</th><th>Run</th><th>Amount</th><th>By</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody id="allq-tbody"></tbody></table></div>
         </div>
-        <div class="tbl-wrap"><table><thead><tr><th>Quote #</th><th>Customer</th><th>Address</th><th>Type</th><th>Model</th><th>Run</th><th>Amount</th><th>By</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody id="allq-tbody"></tbody></table></div>
+      </div>
+
+      <!-- Extra work pane -->
+      <div id="allq-pane-ew" class="qtab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">All extra work quotes</div>
+          </div>
+          <div class="tbl-wrap" style="margin-top:10px">
+            <table><thead><tr>
+              <th>Quote ID</th><th>Account</th><th>Customer</th><th>Mobile</th><th>Booking ref.</th><th>Amount</th><th>Date</th><th>By</th><th style="width:120px">Actions</th>
+            </tr></thead>
+            <tbody id="allq-ew-tbody"></tbody>
+          </table></div>
+        </div>
       </div>
     </div>
 
@@ -791,9 +830,33 @@
     <!-- ═══ MY QUOTES ═══ -->
     <div class="sec" id="sec-myq">
       <div id="revision-banner" style="display:none"></div>
-      <div class="card">
-        <div class="card-header"><div><div class="card-title">My quotes</div><div class="card-sub">Track submissions, approvals and revision requests</div></div><button class="btn btn-primary btn-sm" onclick="nav('newq')"><i class="ti ti-plus"></i>New quote</button></div>
-        <div id="myq-list"></div>
+
+      <!-- Quote type tabs -->
+      <div class="qtabs">
+        <button class="qtab active" id="myq-tab-install" onclick="switchQTab('myq','install',this)">
+          <i class="ti ti-bolt" style="font-size:13px;margin-right:4px"></i>Installation
+          <span id="myq-install-count" style="margin-left:6px;background:#ebf4ff;color:#3182ce;border-radius:10px;padding:1px 7px;font-size:10px">0</span>
+        </button>
+        <button class="qtab" id="myq-tab-ew" onclick="switchQTab('myq','ew',this)">
+          <i class="ti ti-tools" style="font-size:13px;margin-right:4px"></i>Extra work
+          <span id="myq-ew-count" style="margin-left:6px;background:#f0fff4;color:#276749;border-radius:10px;padding:1px 7px;font-size:10px">0</span>
+        </button>
+      </div>
+      <div id="myq-pane-install" class="qtab-pane active">
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Installation quotes</div><div class="card-sub">Track submissions, approvals and revision requests</div></div><button class="btn btn-primary btn-sm" onclick="nav('newq')"><i class="ti ti-plus"></i>New quote</button></div>
+          <div id="myq-list"></div>
+        </div>
+      </div>
+      <div id="myq-pane-ew" class="qtab-pane">
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Extra work quotes</div><div class="card-sub">Quotations for extra work at customer sites</div></div><button class="btn btn-primary btn-sm" onclick="nav('extrawork')"><i class="ti ti-plus"></i>New EW quote</button></div>
+          <div class="tbl-wrap" style="margin-top:10px">
+            <table><thead><tr>
+              <th>Quote ID</th><th>Account</th><th>Customer</th><th>Mobile</th><th>Booking ref.</th><th>Amount</th><th>Date</th><th>By</th><th>Actions</th>
+            </tr></thead><tbody id="myq-ew-tbody"></tbody></table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -828,6 +891,26 @@
           <button class="btn btn-primary btn-sm" onclick="openAddAccount()"><i class="ti ti-building-plus"></i>Add account</button>
           <button class="btn btn-success btn-sm" onclick="saveAccountPricing()"><i class="ti ti-device-floppy"></i>Save rates</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Work items management -->
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Work item list</div>
+          <div class="card-sub">Edit, add or remove extra work items used across all accounts</div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="addExtraWorkItem()"><i class="ti ti-plus"></i>Add item</button>
+      </div>
+      <div class="tbl-wrap" style="margin-top:10px">
+        <table><thead><tr>
+          <th style="width:45%">Item name</th>
+          <th style="width:15%">Unit</th>
+          <th style="width:15%">Default rate (₹)</th>
+          <th style="width:25%">Actions</th>
+        </tr></thead>
+        <tbody id="ew-items-mgmt-tbody"></tbody></table>
       </div>
     </div>
 
@@ -2125,7 +2208,7 @@ function submitQ(status) {
   optIncluded = {}; customOptionals = []; customIncl = {};
   calcQ();
   updateBadges(); renderDashboard();
-  populateAccountDropdowns(); populatePaymentDropdown(); renderAllQ(); renderMyQuotes();
+  populateAccountDropdowns(); populatePaymentDropdown(); updateQTabCounts(); renderAllQ(); renderMyQuotes();
   showToast(status === 'Pending review' ? `${id} submitted for approval` : `Draft ${id} saved`);
   nav('myq');
 }
@@ -2166,7 +2249,7 @@ function confirmApprove() {
   q.history.push({status:'Approved', by:'Super Admin', date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note});
   closeModal('modal-approve');
   updateBadges(); renderDashboard();
-  populateAccountDropdowns(); populatePaymentDropdown(); renderApprovals(); renderAllQ(); renderMyQuotes();
+  populateAccountDropdowns(); populatePaymentDropdown(); updateQTabCounts(); renderApprovals(); renderAllQ(); renderMyQuotes();
   showToast(`${activeQId} approved — sales team notified`);
 }
 
@@ -2179,7 +2262,7 @@ function confirmReject() {
   q.history.push({status:'Revision needed', by:'Super Admin', date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}), note: reason});
   closeModal('modal-reject');
   updateBadges(); renderDashboard();
-  populateAccountDropdowns(); populatePaymentDropdown(); renderApprovals(); renderAllQ(); renderMyQuotes();
+  populateAccountDropdowns(); populatePaymentDropdown(); updateQTabCounts(); renderApprovals(); renderAllQ(); renderMyQuotes();
   showToast(`Revision requested for ${activeQId}`);
 }
 
@@ -2473,7 +2556,7 @@ function exportWordFallback(q) {
       <td style="border:1px solid #CBD5E0;padding:4pt 7pt;text-align:right;font-weight:bold;font-size:9pt">${F2((item.qty||1)*(item.rate||0))}</td>
     </tr>`).join('')
   const docHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8">
-<!-- BUILD v2.1 - pill shows username --><meta name=ProgId content=Word.Document><style>@page{size:A4;margin:2cm}body{font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1A202C}table{border-collapse:collapse;width:100%}.gt td{font-weight:bold;font-size:12pt;background:#1A3A5C;color:#fff}</style></head><body>
+<!-- BUILD v4.0 - extra work, dual quotes tab, editable items --><meta name=ProgId content=Word.Document><style>@page{size:A4;margin:2cm}body{font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1A202C}table{border-collapse:collapse;width:100%}.gt td{font-weight:bold;font-size:12pt;background:#1A3A5C;color:#fff}</style></head><body>
 <table style="width:100%;border:none;border-bottom:3px solid #2E6DB4;margin-bottom:10pt"><tr>
 <td style="border:none;padding:8pt 0"><div style="display:flex;align-items:center;gap:10pt"><img src="data:image/png;base64,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" alt="Exicom" style="height:38pt;width:38pt;border-radius:50%"><div><div style="font-size:18pt;font-weight:bold;color:#1A3A5C">exicom</div><div style="font-size:8pt;color:#718096;font-style:italic">beautifully engineered&#x2122; | EV Charger Installation Services</div></div></div></td>
 <td style="border:none;text-align:right;padding:8pt 0"><b style="font-size:22pt;color:#2E6DB4">QUOTATION</b></td></tr></table>
@@ -2555,7 +2638,7 @@ async function deleteQuote(id) {
     quotes = quotes.filter(x => x.id !== id);
     saveLocal();
     updateBadges(); renderDashboard();
-  populateAccountDropdowns(); populatePaymentDropdown(); renderAllQ(); renderMyQuotes();
+  populateAccountDropdowns(); populatePaymentDropdown(); updateQTabCounts(); renderAllQ(); renderMyQuotes();
     try { renderApprovals(); } catch(e) {}
     showToast('Quote ' + id + ' deleted');
   } catch(e) {
@@ -2567,7 +2650,6 @@ async function deleteQuote(id) {
    EXTRA WORK MODULE — Accounts, Payment accounts, EW Quotes
 ════════════════════════════════════════════════════════════════ */
 
-const F = v => '₹' + Math.round(v||0).toLocaleString('en-IN');
 let ewItems = [];   /* current extra work quote line items */
 let ewEditId = null;
 
@@ -3018,6 +3100,119 @@ ${payBlock}
 }
 
 /* ── nav() handler for new sections ──────────────────────────── */
+
+/* ── Quote tab switcher ───────────────────────────────────────── */
+function switchQTab(section, pane, btn) {
+  const prefix = section + '-pane-';
+  document.querySelectorAll('[id^="'+prefix+'"]').forEach(el => el.classList.remove('active'));
+  document.getElementById(prefix + pane)?.classList.add('active');
+  /* Update tab buttons */
+  const tabContainer = btn.closest('.qtabs');
+  tabContainer?.querySelectorAll('.qtab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  /* Render EW quotes when EW tab selected */
+  if (pane === 'ew') renderEWQuoteTable(section);
+}
+
+function renderEWQuoteTable(section) {
+  const tbody = document.getElementById(section + '-ew-tbody');
+  if (!tbody) return;
+  const rows  = section === 'myq'
+    ? extraWorkQuotes.filter(q => q.by === (_currentUserName||(currentUser?.name||'')))
+    : extraWorkQuotes;
+  /* Update count badge */
+  const badge = document.getElementById(section + '-ew-count');
+  if (badge) badge.textContent = rows.length;
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:20px">No extra work quotes yet</td></tr>';
+    return;
+  }
+  /* F global */
+  tbody.innerHTML = rows.map((q,i) => `<tr>
+    <td style="font-weight:700;color:var(--blue)">${q.id}</td>
+    <td><span class="tag tag-blue" style="font-size:10px">${q.account||'—'}</span></td>
+    <td style="font-weight:600">${q.customer}</td>
+    <td style="font-size:12px">${q.mobile||'—'}</td>
+    <td style="font-size:12px;color:var(--text2)">${q.booking||'—'}</td>
+    <td style="font-weight:700">${F(q.total)}</td>
+    <td style="font-size:12px">${q.date||'—'}</td>
+    <td style="font-size:12px">${q.by||'—'}</td>
+    <td>
+      <div style="display:flex;gap:5px">
+        <button class="btn btn-sm btn-success" onclick="exportEWQuote(extraWorkQuotes[${i}])">
+          <i class="ti ti-download"></i>Download
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEWQuote(${i})">
+          <i class="ti ti-trash"></i>
+        </button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function deleteEWQuote(i) {
+  if (!confirm('Delete this extra work quote?')) return;
+  extraWorkQuotes.splice(i, 1);
+  renderEWQuoteTable('allq');
+  renderEWQuoteTable('myq');
+  showToast('Quote deleted');
+}
+
+/* Update install quote counts in tabs */
+function updateQTabCounts() {
+  const myQuotes = (role==='admin') ? quotes
+    : quotes.filter(q => q.by === (_currentUserName||(currentUser?.name||'')));
+  const myEW = extraWorkQuotes.filter(q => q.by === (_currentUserName||(currentUser?.name||'')));
+  const allEW = extraWorkQuotes;
+  const ic = document.getElementById('myq-install-count');  if(ic) ic.textContent = myQuotes.length;
+  const ec = document.getElementById('myq-ew-count');        if(ec) ec.textContent = myEW.length;
+  const aic = document.getElementById('allq-install-count'); if(aic) aic.textContent = quotes.length;
+  const aec = document.getElementById('allq-ew-count');      if(aec) aec.textContent = allEW.length;
+}
+
+/* ── Work items management (editable list) ────────────────────── */
+function renderEWItemsMgmt() {
+  const tbody = document.getElementById('ew-items-mgmt-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = extraWorkItems.map((item,i) => `<tr>
+    <td>
+      <input value="${item.name}" onchange="extraWorkItems[${i}].name=this.value"
+        style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-weight:600;background:var(--surface);color:var(--text)">
+    </td>
+    <td>
+      <select onchange="extraWorkItems[${i}].unit=this.value"
+        style="width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--surface);color:var(--text)">
+        ${['Visit','Unit','Set','Metre','Trip','LS','Hour'].map(u => `<option ${item.unit===u?'selected':''}>${u}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <input type="number" value="${item.rate||0}" min="0"
+        style="width:90px;padding:5px 8px;border:1.5px solid #bee3f8;border-radius:5px;font-size:13px;font-weight:600;background:#ebf8ff;color:#1a4a7a"
+        onchange="extraWorkItems[${i}].rate=+this.value">
+    </td>
+    <td>
+      <div style="display:flex;gap:5px">
+        <button class="btn btn-sm btn-danger" onclick="deleteExtraWorkItem(${i})">
+          <i class="ti ti-trash"></i>
+        </button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function addExtraWorkItem() {
+  extraWorkItems.push({ id:'ew_'+Date.now(), name:'New work item', unit:'Unit', rate:0 });
+  renderEWItemsMgmt();
+  showToast('Work item added');
+}
+
+function deleteExtraWorkItem(i) {
+  if (!confirm('Delete "'+extraWorkItems[i].name+'"?')) return;
+  extraWorkItems.splice(i, 1);
+  renderEWItemsMgmt();
+  showToast('Item deleted');
+}
+
 function savePricing() { populateCableDropdown(); populateChargerDropdown(); renderChargerModels(); showToast('Prices saved — active on all new quotes'); }
 function resetPrices() { prices = JSON.parse(JSON.stringify(defaultPrices)); cables = JSON.parse(JSON.stringify(defaultCables)); renderPricing(); showToast('Prices reset to defaults'); }
 
@@ -3046,7 +3241,7 @@ function nav(id) {
   if (id === 'pricing')  renderPricing();
   if (id === 'chargers') { renderChargerModels(); populateChargerCableSelect(''); }
   if (id === 'team')       renderTeam();
-  if (id === 'accounts')   { renderAccountChips(); populateAccountDropdowns(); renderAccountPricing(); }
+  if (id === 'accounts')   { renderAccountChips(); populateAccountDropdowns(); renderAccountPricing(); renderEWItemsMgmt(); }
   if (id === 'payment')    renderPaymentAccounts();
   if (id === 'extrawork')  { populateAccountDropdowns(); populatePaymentDropdown(); if(!ewLineItems.length) resetEWForm(); }
   if (id === 'allq')    renderAllQ();
@@ -3254,7 +3449,7 @@ function scheduleAutoSave() {
 function refreshAllViews() {
   populateCableDropdown(); populateChargerDropdown();
   updateBadges(); renderDashboard();
-  populateAccountDropdowns(); populatePaymentDropdown();
+  populateAccountDropdowns(); populatePaymentDropdown(); updateQTabCounts();
   const cur = document.querySelector('.sec.active')?.id.replace('sec-','');
   if (cur==='pricing')   renderPricing();
   if (cur==='chargers')  renderChargerModels();
